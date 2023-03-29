@@ -8,27 +8,28 @@ debug: cube-debug wii-debug
 release: cube-release wii-release
 
 cube-debug:
-	$(MAKE) -C source PLATFORM=cube BUILD=cube_debug
+	$(MAKE) -C libogc2 PLATFORM=cube BUILD=cube_debug
+	-$(MAKE) -C libogc-rice PLATFORM=cube BUILD=cube_debug
 
 wii-debug:
-	$(MAKE) -C source  PLATFORM=wii BUILD=wii_debug
+	$(MAKE) -C libogc2 PLATFORM=wii BUILD=wii_debug
+	-$(MAKE) -C libogc-rice PLATFORM=wii BUILD=wii_debug
 
 cube-release:
-	$(MAKE) -C source  PLATFORM=cube BUILD=cube_release
+	$(MAKE) -C libogc2 PLATFORM=cube BUILD=cube_release
+	-$(MAKE) -C libogc-rice PLATFORM=cube BUILD=cube_release
 
 wii-release:
-	$(MAKE) -C source  PLATFORM=wii BUILD=wii_release
+	$(MAKE) -C libogc2 PLATFORM=wii BUILD=wii_release
+	-$(MAKE) -C libogc-rice PLATFORM=wii BUILD=wii_release
 
 clean: 
-	$(MAKE) -C source clean
+	$(MAKE) -C libogc2 clean
+	-$(MAKE) -C libogc-rice clean
 
-cube-install: cube-release
-	$(MAKE) -C source cube-install PLATFORM=cube
-
-wii-install: wii-release
-	$(MAKE) -C source wii-install PLATFORM=wii
-
-install: wii-install
+install: cube-release wii-release
+	$(MAKE) -C libogc2 install
+	-$(MAKE) -C libogc-rice install
 
 run: install
 	$(MAKE) -C example

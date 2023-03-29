@@ -96,7 +96,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
     int i;
 
     union {
-        u8 buffer[MAX_SECTOR_SIZE];
+        u8 buffer[MAX_SECTOR_SIZE] ATTRIBUTE_ALIGN(32);
         MASTER_BOOT_RECORD mbr;
         EXTENDED_BOOT_RECORD ebr;
         NTFS_BOOT_SECTOR boot;
@@ -138,7 +138,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
             partition = &mbr.partitions[i];
             part_lba = le32_to_cpu(mbr.partitions[i].lba_start);
 
-            ntfs_log_debug("Partition %i: %s, sector %d, type 0x%x\n", i + 1,
+            ntfs_log_debug("Partition %i: %s, sector %lld, type 0x%x\n", i + 1,
                            partition->status == PARTITION_STATUS_BOOTABLE ? "bootable (active)" : "non-bootable",
                            part_lba, partition->type);
 
@@ -183,7 +183,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
                         // Read and validate the extended boot record
                         if (interface->readSectors(ebr_lba + next_erb_lba, 1, &sector)) {
                             if (sector.ebr.signature == EBR_SIGNATURE) {
-                                ntfs_log_debug("Logical Partition @ %d: %s type 0x%x\n", ebr_lba + next_erb_lba,
+                                ntfs_log_debug("Logical Partition @ %lld: %s type 0x%x\n", ebr_lba + next_erb_lba,
                                                sector.ebr.partition.status == PARTITION_STATUS_BOOTABLE ? "bootable (active)" : "non-bootable",
                                                sector.ebr.partition.type);
 
@@ -195,9 +195,9 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
                                 // Check if this partition has a valid NTFS boot record
                                 if (interface->readSectors(part_lba, 1, &sector)) {
                                     if (sector.boot.oem_id == NTFS_OEM_ID) {
-                                        ntfs_log_debug("Logical Partition @ %d: Valid NTFS boot sector found\n", part_lba);
+                                        ntfs_log_debug("Logical Partition @ %lld: Valid NTFS boot sector found\n", part_lba);
                                         if(sector.ebr.partition.type != PARTITION_TYPE_NTFS) {
-                                            ntfs_log_warning("Logical Partition @ %d: Is NTFS but type is 0x%x; 0x%x was expected\n", part_lba, sector.ebr.partition.type, PARTITION_TYPE_NTFS);
+                                            ntfs_log_warning("Logical Partition @ %lld: Is NTFS but type is 0x%x; 0x%x was expected\n", part_lba, sector.ebr.partition.type, PARTITION_TYPE_NTFS);
                                         }
                                         if (partition_count < NTFS_MAX_PARTITIONS) {
                                             partition_starts[partition_count] = part_lba;

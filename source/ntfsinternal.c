@@ -53,10 +53,13 @@ const INTERFACE_ID ntfs_disc_interfaces[] = {
 
 #elif defined(__gamecube__)
 #include <sdcard/gcsd.h>
+#include <ogc/dvd.h>
 
 const INTERFACE_ID ntfs_disc_interfaces[] = {
     { "carda", &__io_gcsda },
     { "cardb", &__io_gcsdb },
+    { "sd", &__io_gcsd2 },
+    { "dvd", &__io_gcode },
     { NULL, NULL }
 };
 

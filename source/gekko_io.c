@@ -119,7 +119,7 @@ static int ntfs_device_gekko_io_open(struct ntfs_device *dev, int flags)
     }
 
     if (!interface->readSectors(fd->startSector, 1, boot)) {
-        ntfs_log_perror("read failure @ sector %d\n", fd->startSector);
+        ntfs_log_perror("read failure @ sector %lld\n", fd->startSector);
         errno = EIO;
         ntfs_free(boot);
         return -1;
@@ -316,9 +316,9 @@ static s64 ntfs_device_gekko_io_readbytes(struct ntfs_device *dev, s64 offset, s
     if((buffer_offset == 0) && (count % fd->sectorSize == 0)) {
 
         // Read from the device
-        ntfs_log_trace("direct read from sector %d (%d sector(s) long)\n", sec_start, sec_count);
+        ntfs_log_trace("direct read from sector %lld (%lld sector(s) long)\n", sec_start, sec_count);
         if (!ntfs_device_gekko_io_readsectors(dev, sec_start, sec_count, buf)) {
-            ntfs_log_perror("direct read failure @ sector %d (%d sector(s) long)\n", sec_start, sec_count);
+            ntfs_log_perror("direct read failure @ sector %lld (%lld sector(s) long)\n", sec_start, sec_count);
             errno = EIO;
             return -1;
         }
@@ -336,10 +336,10 @@ static s64 ntfs_device_gekko_io_readbytes(struct ntfs_device *dev, s64 offset, s
         }
 
         // Read from the device
-        ntfs_log_trace("buffered read from sector %d (%d sector(s) long)\n", sec_start, sec_count);
+        ntfs_log_trace("buffered read from sector %lld (%lld sector(s) long)\n", sec_start, sec_count);
         ntfs_log_trace("count: %d  sec_count:%d  fd->sectorSize: %d )\n", (u32)count, (u32)sec_count,(u32)fd->sectorSize);
         if (!ntfs_device_gekko_io_readsectors(dev, sec_start, sec_count, buffer)) {
-            ntfs_log_perror("buffered read failure @ sector %d (%d sector(s) long)\n", sec_start, sec_count);
+            ntfs_log_perror("buffered read failure @ sector %lld (%lld sector(s) long)\n", sec_start, sec_count);
             ntfs_free(buffer);
             errno = EIO;
             return -1;
@@ -406,9 +406,9 @@ static s64 ntfs_device_gekko_io_writebytes(struct ntfs_device *dev, s64 offset, 
     if((buffer_offset == 0) && (count % fd->sectorSize == 0))
     {
         // Write to the device
-        ntfs_log_trace("direct write to sector %d (%d sector(s) long)\n", sec_start, sec_count);
+        ntfs_log_trace("direct write to sector %lld (%lld sector(s) long)\n", sec_start, sec_count);
         if (!ntfs_device_gekko_io_writesectors(dev, sec_start, sec_count, buf)) {
-            ntfs_log_perror("direct write failure @ sector %d (%d sector(s) long)\n", sec_start, sec_count);
+            ntfs_log_perror("direct write failure @ sector %lld (%lld sector(s) long)\n", sec_start, sec_count);
             errno = EIO;
             return -1;
         }
@@ -428,7 +428,7 @@ static s64 ntfs_device_gekko_io_writebytes(struct ntfs_device *dev, s64 offset, 
         if(buffer_offset != 0)
         {
             if (!ntfs_device_gekko_io_readsectors(dev, sec_start, 1, buffer)) {
-                ntfs_log_perror("read failure @ sector %d\n", sec_start);
+                ntfs_log_perror("read failure @ sector %lld\n", sec_start);
                 ntfs_free(buffer);
                 errno = EIO;
                 return -1;
@@ -437,7 +437,7 @@ static s64 ntfs_device_gekko_io_writebytes(struct ntfs_device *dev, s64 offset, 
         if((buffer_offset+count) % fd->sectorSize != 0)
         {
             if (!ntfs_device_gekko_io_readsectors(dev, sec_start + sec_count - 1, 1, buffer + ((sec_count-1) * fd->sectorSize))) {
-                ntfs_log_perror("read failure @ sector %d\n", sec_start + sec_count - 1);
+                ntfs_log_perror("read failure @ sector %lld\n", sec_start + sec_count - 1);
                 ntfs_free(buffer);
                 errno = EIO;
                 return -1;
@@ -448,9 +448,9 @@ static s64 ntfs_device_gekko_io_writebytes(struct ntfs_device *dev, s64 offset, 
         memcpy(buffer + buffer_offset, buf, count);
 
         // Write to the device
-        ntfs_log_trace("buffered write to sector %d (%d sector(s) long)\n", sec_start, sec_count);
+        ntfs_log_trace("buffered write to sector %lld (%lld sector(s) long)\n", sec_start, sec_count);
         if (!ntfs_device_gekko_io_writesectors(dev, sec_start, sec_count, buffer)) {
-            ntfs_log_perror("buffered write failure @ sector %d\n", sec_start);
+            ntfs_log_perror("buffered write failure @ sector %lld\n", sec_start);
             ntfs_free(buffer);
             errno = EIO;
             return -1;

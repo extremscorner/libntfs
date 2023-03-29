@@ -8,11 +8,11 @@ $(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>dev
 endif
 
 ifeq ($(PLATFORM),wii)
-include $(DEVKITPPC)/wii_rules
+include $(DEVKITPRO)/libogc2/wii_rules
 endif
 
 ifeq ($(PLATFORM),cube)
-include $(DEVKITPPC)/gamecube_rules
+include $(DEVKITPRO)/libogc2/gamecube_rules
 endif
 
 #---------------------------------------------------------------------------------
@@ -21,9 +21,9 @@ endif
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
 BUILD		?=	wii_release
-SOURCES		:=	.
+SOURCES		:=	../source
 INCLUDES	:=	../include
-LIBDIR		:=	../lib
+LIBDIR		:=	lib
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -97,13 +97,10 @@ clean:
 
 all: $(NTFSBIN)
 
-cube-install:
-	cp ../include/ntfs.h $(DEVKITPRO)/libogc/include
-	cp ../lib/cube/libntfs.a $(DEVKITPRO)/libogc/lib/cube
-
-wii-install:
-	cp ../include/ntfs.h $(PORTLIBS)/include
-	cp ../lib/wii/libntfs.a $(PORTLIBS)/lib
+install:
+	cp ../include/ntfs.h $(DEVKITPRO)/libogc2/include
+	cp lib/wii/libntfs.a $(DEVKITPRO)/libogc2/lib/wii
+	cp lib/cube/libntfs.a $(DEVKITPRO)/libogc2/lib/cube
 
 #---------------------------------------------------------------------------------
 else
