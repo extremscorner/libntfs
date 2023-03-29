@@ -29,9 +29,6 @@
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
 #endif
-#ifdef HAVE_MATH_H
-#include <math.h>
-#endif
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
@@ -62,6 +59,7 @@
 #include "cache.h"
 #include "device.h"
 #include "bootsect.h"
+#include "mem_allocate.h"
 
 #define DEV_FD(dev) ((gekko_fd *)dev->d_private)
 
@@ -112,7 +110,7 @@ static int ntfs_device_gekko_io_open(struct ntfs_device *dev, int flags)
     }
 
     // Check that there is a valid NTFS boot sector at the start of the device
-    NTFS_BOOT_SECTOR *boot = (NTFS_BOOT_SECTOR *) ntfs_alloc(MAX_SECTOR_SIZE);
+    NTFS_BOOT_SECTOR *boot = (NTFS_BOOT_SECTOR *) ntfs_align(MAX_SECTOR_SIZE);
     if(boot == NULL) {
         errno = ENOMEM;
         return -1;
@@ -305,10 +303,10 @@ static s64 ntfs_device_gekko_io_readbytes(struct ntfs_device *dev, s64 offset, s
 
     // Determine the range of sectors required for this read
     if (offset > 0) {
-        sec_start += (sec_t) floor((f64) offset / (f64) fd->sectorSize);
+        sec_start += (sec_t) (offset / fd->sectorSize);
     }
     if (buffer_offset+count > fd->sectorSize) {
-        sec_count = (sec_t) ceil((f64) (buffer_offset+count) / (f64) fd->sectorSize);
+        sec_count = (sec_t) ((buffer_offset + count + fd->sectorSize - 1) / fd->sectorSize);
     }
 
     // If this read happens to be on the sector boundaries then do the read straight into the destination buffer
@@ -329,7 +327,7 @@ static s64 ntfs_device_gekko_io_readbytes(struct ntfs_device *dev, s64 offset, s
 	{
 
         // Allocate a buffer to hold the read data
-        buffer = (u8*)ntfs_alloc(sec_count * fd->sectorSize);
+        buffer = (u8 *) ntfs_align(sec_count * fd->sectorSize);
         if (!buffer) {
             errno = ENOMEM;
             return -1;
@@ -396,10 +394,10 @@ static s64 ntfs_device_gekko_io_writebytes(struct ntfs_device *dev, s64 offset, 
 
     // Determine the range of sectors required for this write
     if (offset > 0) {
-        sec_start += (sec_t) floor((f64) offset / (f64) fd->sectorSize);
+        sec_start += (sec_t) (offset / fd->sectorSize);
     }
     if ((buffer_offset+count) > fd->sectorSize) {
-        sec_count = (sec_t) ceil((f64) (buffer_offset+count) / (f64) fd->sectorSize);
+        sec_count = (sec_t) ((buffer_offset + count + fd->sectorSize - 1) / fd->sectorSize);
     }
 
     // If this write happens to be on the sector boundaries then do the write straight to disc
@@ -417,7 +415,7 @@ static s64 ntfs_device_gekko_io_writebytes(struct ntfs_device *dev, s64 offset, 
     else
     {
         // Allocate a buffer to hold the write data
-        buffer = (u8 *) ntfs_alloc(sec_count * fd->sectorSize);
+        buffer = (u8 *) ntfs_align(sec_count * fd->sectorSize);
         if (!buffer) {
             errno = ENOMEM;
             return -1;
@@ -570,9 +568,9 @@ static int ntfs_device_gekko_io_stat(struct ntfs_device *dev, struct stat *buf)
 /**
  *
  */
-static int ntfs_device_gekko_io_ioctl(struct ntfs_device *dev, int request, void *argp)
+static int ntfs_device_gekko_io_ioctl(struct ntfs_device *dev, unsigned long request, void *argp)
 {
-    ntfs_log_trace("dev %p, request %i, argp %p\n", dev, request, argp);
+    ntfs_log_trace("dev %p, request 0x%lx, argp %p\n", dev, request, argp);
 
     // Get the device driver descriptor
     gekko_fd *fd = DEV_FD(dev);
@@ -631,7 +629,7 @@ static int ntfs_device_gekko_io_ioctl(struct ntfs_device *dev, int request, void
 
         // Unimplemented ioctrl
         default: {
-            ntfs_log_perror("Unimplemented ioctrl %i\n", request);
+            ntfs_log_perror("Unimplemented ioctrl 0x%lx\n", request);
             errno = EOPNOTSUPP;
             return -1;
         }

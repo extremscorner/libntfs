@@ -1,51 +1,62 @@
+/* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Define if building universal (internal helper macro) */
+/* #undef AC_APPLE_UNIVERSAL_BUILD */
+
+/* Define to 1 for disabling reparse plugins */
+#define DISABLE_PLUGINS 1
 
 /* Define this to 1 if you want to enable support of encrypted files in
    libntfs and utilities. */
-#undef ENABLE_CRYPTO
+/* #undef ENABLE_CRYPTO */
 
 /* Define to 1 if debug should be enabled */
-#undef ENABLE_DEBUG
+/* #undef ENABLE_DEBUG */
+
+/* Define this to 1 if you want to enable use of Windows compliant disk
+   geometry. */
+/* #undef ENABLE_HD */
 
 /* Define to 1 if the nfconv patch should be enabled */
-#undef ENABLE_NFCONV
+/* #undef ENABLE_NFCONV */
 
 /* Define this to 1 if you want to enable generation of DCE compliant UUIDs.
    */
-#undef ENABLE_UUID
+/* #undef ENABLE_UUID */
 
 /* Define to 1 if using internal fuse */
-#undef FUSE_INTERNAL
+/* #undef FUSE_INTERNAL */
 
 /* Define to 1 if you have the `atexit' function. */
 #define HAVE_ATEXIT 1
 
 /* Define to 1 if you have the `basename' function. */
-#undef HAVE_BASENAME
+/* #undef HAVE_BASENAME */
 
 /* Define to 1 if you have the <byteswap.h> header file. */
-#undef HAVE_BYTESWAP_H
+/* #undef HAVE_BYTESWAP_H */
 
 /* Define to 1 if you have the `clock_gettime' function. */
-#undef HAVE_CLOCK_GETTIME
+#define HAVE_CLOCK_GETTIME 1
 
 /* Define to 1 if you have the <ctype.h> header file. */
 #define HAVE_CTYPE_H 1
 
 /* Define to 1 if you have the `daemon' function. */
-#undef HAVE_DAEMON
+/* #undef HAVE_DAEMON */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#undef HAVE_DLFCN_H
+/* #undef HAVE_DLFCN_H */
 
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
-#undef HAVE_DOPRNT
+/* #undef HAVE_DOPRNT */
 
 /* Define to 1 if you have the `dup2' function. */
-#undef HAVE_DUP2
+#define HAVE_DUP2 1
 
 /* Define to 1 if you have the <endian.h> header file. */
-#undef HAVE_ENDIAN_H
+/* #undef HAVE_ENDIAN_H */
 
 /* Define to 1 if you have the <errno.h> header file. */
 #define HAVE_ERRNO_H 1
@@ -54,10 +65,10 @@
 #define HAVE_FCNTL_H 1
 
 /* Define to 1 if you have the `fdatasync' function. */
-#undef HAVE_FDATASYNC
+#define HAVE_FDATASYNC 1
 
 /* Define to 1 if you have the <features.h> header file. */
-#undef HAVE_FEATURES_H
+/* #undef HAVE_FEATURES_H */
 
 /* Define to 1 if you have the `ffs' function. */
 #define HAVE_FFS 1
@@ -66,7 +77,7 @@
 #define HAVE_FORK 1
 
 /* Define to 1 if you have the `getmntent' function. */
-#undef HAVE_GETMNTENT
+/* #undef HAVE_GETMNTENT */
 
 /* Define to 1 if you have the <getopt.h> header file. */
 #define HAVE_GETOPT_H 1
@@ -75,31 +86,37 @@
 #define HAVE_GETOPT_LONG 1
 
 /* Define to 1 if you have the `gettimeofday' function. */
-#undef HAVE_GETTIMEOFDAY
+#define HAVE_GETTIMEOFDAY 1
 
 /* Define to 1 if you have the `hasmntopt' function. */
-#undef HAVE_HASMNTOPT
+/* #undef HAVE_HASMNTOPT */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
+
+/* Define to 1 if you have the `c' library (-lc). */
+/* #undef HAVE_LIBC */
 
 /* Define to 1 if you have the <libgen.h> header file. */
 #define HAVE_LIBGEN_H 1
 
 /* Define to 1 if you have the <libintl.h> header file. */
-#undef HAVE_LIBINTL_H
+/* #undef HAVE_LIBINTL_H */
 
 /* Define to 1 if you have the <limits.h> header file. */
 #define HAVE_LIMITS_H 1
 
 /* Define to 1 if you have the <linux/fd.h> header file. */
-#undef HAVE_LINUX_FD_H
+/* #undef HAVE_LINUX_FD_H */
+
+/* Define to 1 if you have the <linux/fs.h> header file. */
+/* #undef HAVE_LINUX_FS_H */
 
 /* Define to 1 if you have the <linux/hdreg.h> header file. */
-#undef HAVE_LINUX_HDREG_H
+/* #undef HAVE_LINUX_HDREG_H */
 
 /* Define to 1 if you have the <linux/major.h> header file. */
-#undef HAVE_LINUX_MAJOR_H
+/* #undef HAVE_LINUX_MAJOR_H */
 
 /* Define to 1 if you have the <locale.h> header file. */
 #define HAVE_LOCALE_H 1
@@ -122,39 +139,42 @@
 /* Define to 1 if you have the `memmove' function. */
 #define HAVE_MEMMOVE 1
 
-/* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
-
 /* Define to 1 if you have the `memset' function. */
 #define HAVE_MEMSET 1
 
+/* Define to 1 if you have the <minix/config.h> header file. */
+/* #undef HAVE_MINIX_CONFIG_H */
+
 /* Define to 1 if you have the <mntent.h> header file. */
-#undef HAVE_MNTENT_H
+/* #undef HAVE_MNTENT_H */
 
 /* Define to 1 if you have the <pwd.h> header file. */
 #define HAVE_PWD_H 1
 
 /* Define to 1 if you have the `random' function. */
-#undef HAVE_RANDOM
+#define HAVE_RANDOM 1
 
 /* Define to 1 if you have the `realpath' function. */
-#undef HAVE_REALPATH
+/* #undef HAVE_REALPATH */
 
 /* Define to 1 if you have the `regcomp' function. */
-#undef HAVE_REGCOMP
+/* #undef HAVE_REGCOMP */
+
+/* Define to 1 if you have the <regex.h> header file. */
+#define HAVE_REGEX_H 1
 
 /* Define to 1 if you have the `setlocale' function. */
 #define HAVE_SETLOCALE 1
 
 /* Define to 1 if you have the `setxattr' function. */
-#undef HAVE_SETXATTR
+/* #undef HAVE_SETXATTR */
 
 /* Define to 1 if you have the `snprintf' function. */
 #define HAVE_SNPRINTF 1
 
 /* Define to 1 if `stat' has the bug that it succeeds when given the
    zero-length file name argument. */
-#undef HAVE_STAT_EMPTY_STRING_BUG
+#define HAVE_STAT_EMPTY_STRING_BUG 1
 
 /* Define to 1 if you have the <stdarg.h> header file. */
 #define HAVE_STDARG_H 1
@@ -190,7 +210,7 @@
 #define HAVE_STRFTIME 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-#undef HAVE_STRINGS_H
+#define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
@@ -207,48 +227,45 @@
 /* Define to 1 if you have the `strtoul' function. */
 #define HAVE_STRTOUL 1
 
-/* Define to 1 if `st_atim' is member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_ATIM
+/* Define to 1 if `st_atim' is a member of `struct stat'. */
+#define HAVE_STRUCT_STAT_ST_ATIM 1
 
-/* Define to 1 if `st_atimensec' is member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_ATIMENSEC
+/* Define to 1 if `st_atimensec' is a member of `struct stat'. */
+/* #undef HAVE_STRUCT_STAT_ST_ATIMENSEC */
 
-/* Define to 1 if `st_atimespec' is member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_ATIMESPEC
+/* Define to 1 if `st_atimespec' is a member of `struct stat'. */
+/* #undef HAVE_STRUCT_STAT_ST_ATIMESPEC */
 
-/* Define to 1 if `st_blocks' is member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_BLOCKS
+/* Define to 1 if `st_blocks' is a member of `struct stat'. */
+#define HAVE_STRUCT_STAT_ST_BLOCKS 1
 
-/* Define to 1 if `st_rdev' is member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_RDEV
+/* Define to 1 if `st_rdev' is a member of `struct stat'. */
+#define HAVE_STRUCT_STAT_ST_RDEV 1
 
 /* Define to 1 if your `struct stat' has `st_blocks'. Deprecated, use
    `HAVE_STRUCT_STAT_ST_BLOCKS' instead. */
-#undef HAVE_ST_BLOCKS
+#define HAVE_ST_BLOCKS 1
 
 /* Define to 1 if you have the `sysconf' function. */
-#define HAVE_SYSCONF 1
+/* #undef HAVE_SYSCONF */
 
 /* Define to 1 if you have the <syslog.h> header file. */
-#undef HAVE_SYSLOG_H
+/* #undef HAVE_SYSLOG_H */
 
 /* Define to 1 if you have the <sys/byteorder.h> header file. */
-#undef HAVE_SYS_BYTEORDER_H
+/* #undef HAVE_SYS_BYTEORDER_H */
 
 /* Define to 1 if you have the <sys/disk.h> header file. */
-#undef HAVE_SYS_DISK_H
+/* #undef HAVE_SYS_DISK_H */
 
 /* Define to 1 if you have the <sys/endian.h> header file. */
-#undef HAVE_SYS_ENDIAN_H
+/* #undef HAVE_SYS_ENDIAN_H */
 
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
-#undef HAVE_SYS_IOCTL_H
-
-/* Define to 1 if you have the <sys/mkdev.h> header file. */
-#undef HAVE_SYS_MKDEV_H
+/* #undef HAVE_SYS_IOCTL_H */
 
 /* Define to 1 if you have the <sys/mount.h> header file. */
-#undef HAVE_SYS_MOUNT_H
+/* #undef HAVE_SYS_MOUNT_H */
 
 /* Define to 1 if you have the <sys/param.h> header file. */
 #define HAVE_SYS_PARAM_H 1
@@ -259,14 +276,11 @@
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
 
-/* Define to 1 if you have the <sys/sysmacros.h> header file. */
-#undef HAVE_SYS_SYSMACROS_H
-
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <sys/vfs.h> header file. */
-#undef HAVE_SYS_VFS_H
+/* #undef HAVE_SYS_VFS_H */
 
 /* Define to 1 if you have the <time.h> header file. */
 #define HAVE_TIME_H 1
@@ -275,16 +289,16 @@
 #define HAVE_UNISTD_H 1
 
 /* Define to 1 if you have the `utime' function. */
-#undef HAVE_UTIME
+#define HAVE_UTIME 1
 
 /* Define to 1 if you have the `utimensat' function. */
-#undef HAVE_UTIMENSAT
+/* #undef HAVE_UTIMENSAT */
 
 /* Define to 1 if you have the <utime.h> header file. */
 #define HAVE_UTIME_H 1
 
 /* Define to 1 if `utime(file, NULL)' sets file's timestamp to the present. */
-#undef HAVE_UTIME_NULL
+#define HAVE_UTIME_NULL 1
 
 /* Define to 1 if you have the `vprintf' function. */
 #define HAVE_VPRINTF 1
@@ -293,23 +307,31 @@
 #define HAVE_WCHAR_H 1
 
 /* Define to 1 if you have the <windows.h> header file. */
-#undef HAVE_WINDOWS_H
+/* #undef HAVE_WINDOWS_H */
 
 /* Define to 1 if the system has the type `_Bool'. */
-#undef HAVE__BOOL
+#define HAVE__BOOL 1
 
 /* Don't update /etc/mtab */
-#undef IGNORE_MTAB
+/* #undef IGNORE_MTAB */
 
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
    slash. */
-#undef LSTAT_FOLLOWS_SLASHED_SYMLINK
+/* #undef LSTAT_FOLLOWS_SLASHED_SYMLINK */
 
-/* Define to 1 if your C compiler doesn't accept -c and -o together. */
-#undef NO_MINUS_C_MINUS_O
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
+#define LT_OBJDIR ".libs/"
+
+/* Define to 1 if `major', `minor', and `makedev' are declared in <mkdev.h>.
+   */
+#define MAJOR_IN_MKDEV 1
+
+/* Define to 1 if `major', `minor', and `makedev' are declared in
+   <sysmacros.h>. */
+/* #undef MAJOR_IN_SYSMACROS */
 
 /* Don't use default IO ops */
-#undef NO_NTFS_DEVICE_DEFAULT_IO_OPS
+/* #undef NO_NTFS_DEVICE_DEFAULT_IO_OPS */
 
 /* Name of package */
 #define PACKAGE "ntfs-3g"
@@ -321,65 +343,158 @@
 #define PACKAGE_NAME "ntfs-3g"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "ntfs-3g 2013.1.13"
+#define PACKAGE_STRING "ntfs-3g 2022.10.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "ntfs-3g"
 
+/* Define to the home page for this package. */
+#define PACKAGE_URL ""
+
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2013.1.13"
+#define PACKAGE_VERSION "2022.10.3"
 
 /* POSIX ACL support */
-#undef POSIXACLS
+/* #undef POSIXACLS */
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #define STDC_HEADERS 1
 
+/* Enable extensions on AIX 3, Interix.  */
+#ifndef _ALL_SOURCE
+# define _ALL_SOURCE 1
+#endif
+/* Enable general extensions on macOS.  */
+#ifndef _DARWIN_C_SOURCE
+# define _DARWIN_C_SOURCE 1
+#endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# define __EXTENSIONS__ 1
+#endif
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE 1
+#endif
+/* Enable X/Open compliant socket functions that do not require linking
+   with -lxnet on HP-UX 11.11.  */
+#ifndef _HPUX_ALT_XOPEN_SOCKET_API
+# define _HPUX_ALT_XOPEN_SOCKET_API 1
+#endif
+/* Identify the host operating system as Minix.
+   This macro does not affect the system headers' behavior.
+   A future release of Autoconf may stop defining this macro.  */
+#ifndef _MINIX
+/* # undef _MINIX */
+#endif
+/* Enable general extensions on NetBSD.
+   Enable NetBSD compatibility extensions on Minix.  */
+#ifndef _NETBSD_SOURCE
+# define _NETBSD_SOURCE 1
+#endif
+/* Enable OpenBSD compatibility extensions on NetBSD.
+   Oddly enough, this does nothing on OpenBSD.  */
+#ifndef _OPENBSD_SOURCE
+# define _OPENBSD_SOURCE 1
+#endif
+/* Define to 1 if needed for POSIX-compatible behavior.  */
+#ifndef _POSIX_SOURCE
+/* # undef _POSIX_SOURCE */
+#endif
+/* Define to 2 if needed for POSIX-compatible behavior.  */
+#ifndef _POSIX_1_SOURCE
+/* # undef _POSIX_1_SOURCE */
+#endif
+/* Enable POSIX-compatible threading on Solaris.  */
+#ifndef _POSIX_PTHREAD_SEMANTICS
+# define _POSIX_PTHREAD_SEMANTICS 1
+#endif
+/* Enable extensions specified by ISO/IEC TS 18661-5:2014.  */
+#ifndef __STDC_WANT_IEC_60559_ATTRIBS_EXT__
+# define __STDC_WANT_IEC_60559_ATTRIBS_EXT__ 1
+#endif
+/* Enable extensions specified by ISO/IEC TS 18661-1:2014.  */
+#ifndef __STDC_WANT_IEC_60559_BFP_EXT__
+# define __STDC_WANT_IEC_60559_BFP_EXT__ 1
+#endif
+/* Enable extensions specified by ISO/IEC TS 18661-2:2015.  */
+#ifndef __STDC_WANT_IEC_60559_DFP_EXT__
+# define __STDC_WANT_IEC_60559_DFP_EXT__ 1
+#endif
+/* Enable extensions specified by ISO/IEC TS 18661-4:2015.  */
+#ifndef __STDC_WANT_IEC_60559_FUNCS_EXT__
+# define __STDC_WANT_IEC_60559_FUNCS_EXT__ 1
+#endif
+/* Enable extensions specified by ISO/IEC TS 18661-3:2015.  */
+#ifndef __STDC_WANT_IEC_60559_TYPES_EXT__
+# define __STDC_WANT_IEC_60559_TYPES_EXT__ 1
+#endif
+/* Enable extensions specified by ISO/IEC TR 24731-2:2010.  */
+#ifndef __STDC_WANT_LIB_EXT2__
+# define __STDC_WANT_LIB_EXT2__ 1
+#endif
+/* Enable extensions specified by ISO/IEC 24747:2009.  */
+#ifndef __STDC_WANT_MATH_SPEC_FUNCS__
+# define __STDC_WANT_MATH_SPEC_FUNCS__ 1
+#endif
+/* Enable extensions on HP NonStop.  */
+#ifndef _TANDEM_SOURCE
+# define _TANDEM_SOURCE 1
+#endif
+/* Enable X/Open extensions.  Define to 500 only if necessary
+   to make mbstate_t available.  */
+#ifndef _XOPEN_SOURCE
+/* # undef _XOPEN_SOURCE */
+#endif
+
+
 /* Version number of package */
-#define VERSION "2013.1.13"
+#define VERSION "2022.10.3"
 
 /* Define to 1 if this is a Windows OS */
-#undef WINDOWS
+/* #undef WINDOWS */
 
-/* Define to 1 if your processor stores words with the most significant byte
-   first (like Motorola and SPARC, unlike Intel and VAX). */
-#define WORDS_BIGENDIAN 1
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+#  define WORDS_BIGENDIAN 1
+# endif
+#endif
 
 /* Define to 1 if your processor stores words with the least significant byte
    first (like Intel and VAX, unlike Motorola and SPARC). */
-#undef WORDS_LITTLEENDIAN
+/* #undef WORDS_LITTLEENDIAN */
 
 /* system extended attributes mappings */
-#undef XATTR_MAPPINGS
+/* #undef XATTR_MAPPINGS */
 
 /* Number of bits in a file offset, on hosts where this is settable. */
-#define _FILE_OFFSET_BITS 64
-
-/* Enable GNU extensions on systems that have them.  */
-#ifndef _GNU_SOURCE
-# undef _GNU_SOURCE
-#endif
+/* #undef _FILE_OFFSET_BITS */
 
 /* Define for large files, on AIX-style hosts. */
-#define _LARGE_FILES 1
+/* #undef _LARGE_FILES */
 
 /* Required define if using POSIX threads */
-#undef _REENTRANT
+/* #undef _REENTRANT */
 
 /* Define to empty if `const' does not conform to ANSI C. */
-#undef const
+/* #undef const */
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
-#define inline __inline__
+/* #undef inline */
 #endif
 
 /* Define to `long int' if <sys/types.h> does not define. */
-#undef off_t
+/* #undef off_t */
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
-#undef size_t
-
-/* Define to 1 if you have the <math.h> header file. */
-#define HAVE_MATH_H 1
+/* #undef size_t */

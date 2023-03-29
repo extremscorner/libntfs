@@ -79,7 +79,7 @@ int ntfsAddDevice (const char *name, void *deviceData)
     }
 
     // Allocate a devoptab for this device
-    dev = (devoptab_t *) ntfs_alloc(sizeof(devoptab_t) + strlen(name) + 1);
+    dev = (devoptab_t *) ntfs_malloc(sizeof(devoptab_t) + strlen(name) + 1);
     if (!dev) {
         errno = ENOMEM;
         return false;
@@ -270,7 +270,6 @@ ntfs_inode *ntfsParseEntry (ntfs_vd *vd, const char *path, int reparseLevel)
 {
     ntfs_inode *ni = NULL;
     char *target = NULL;
-    int attr_size;
 
     // Sanity check
     if (!vd) {
@@ -306,7 +305,7 @@ ntfs_inode *ntfsParseEntry (ntfs_vd *vd, const char *path, int reparseLevel)
             }
 
             // Get the target path of this entry
-            target = ntfs_make_symlink(ni, path, &attr_size);
+            target = ntfs_make_symlink(ni, path);
             if (!target) {
                 ntfsCloseEntry(vd, ni);
                 return NULL;
@@ -319,7 +318,7 @@ ntfs_inode *ntfsParseEntry (ntfs_vd *vd, const char *path, int reparseLevel)
             ni = ntfsParseEntry(vd, target, reparseLevel++);
 
             // Clean up
-            // use free because the value was not allocated with ntfs_alloc
+            // use free because the value was not allocated with ntfs_malloc
             free(target);
 
         }
@@ -463,7 +462,7 @@ cleanup:
     if(dir_ni)
         ntfsCloseEntry(vd, dir_ni);
 
-    // use free because the value was not allocated with ntfs_alloc
+    // use free because the value was not allocated with ntfs_malloc
     if(utarget)
         free(utarget);
 
@@ -566,7 +565,7 @@ cleanup:
     if(ni)
         ntfsCloseEntry(vd, ni);
 
-    // use free because the value was not allocated with ntfs_alloc
+    // use free because the value was not allocated with ntfs_malloc
     if(uname)
         free(uname);
 
@@ -663,7 +662,7 @@ cleanup:
     if(ni)
         ntfsCloseEntry(vd, ni);
 
-    // use free because the value was not allocated with ntfs_alloc
+    // use free because the value was not allocated with ntfs_malloc
     if(uname)
         free(uname);
 
@@ -821,7 +820,7 @@ int ntfsUnicodeToLocal (const ntfschar *ins, const int ins_len, char **outs, int
     if(ucstombs_out)
     {
         //use proper allocation
-        *outs = (char *) ntfs_alloc(strlen(ucstombs_out) + 1);
+        *outs = (char *) ntfs_malloc(strlen(ucstombs_out) + 1);
         if(!*outs)
         {
             errno = ENOMEM;
@@ -840,7 +839,7 @@ int ntfsUnicodeToLocal (const ntfschar *ins, const int ins_len, char **outs, int
         {
             if (!*outs)
             {
-                *outs = (char *) ntfs_alloc(ins_len + 1);
+                *outs = (char *) ntfs_malloc(ins_len + 1);
                 if (!*outs) {
                     errno = ENOMEM;
                     return -1;

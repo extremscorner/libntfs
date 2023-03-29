@@ -264,7 +264,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
 
     // Return the found partitions (if any)
     if (partition_count > 0) {
-        *partitions = (sec_t*)ntfs_alloc(sizeof(sec_t) * partition_count);
+        *partitions = (sec_t*)ntfs_malloc(sizeof(sec_t) * partition_count);
         if (*partitions) {
             memcpy(*partitions, &partition_starts, sizeof(sec_t) * partition_count);
             return partition_count;
@@ -322,7 +322,7 @@ int ntfsMountAll (ntfs_md **mounts, u32 flags)
 
     // Return the mounts (if any)
     if (mount_count > 0 && mounts) {
-        *mounts = (ntfs_md*)ntfs_alloc(sizeof(ntfs_md) * mount_count);
+        *mounts = (ntfs_md*)ntfs_malloc(sizeof(ntfs_md) * mount_count);
         if (*mounts) {
             memcpy(*mounts, &mount_points, sizeof(ntfs_md) * mount_count);
             return mount_count;
@@ -395,7 +395,7 @@ int ntfsMountDevice (const DISC_INTERFACE *interface, ntfs_md **mounts, u32 flag
 
     // Return the mounts (if any)
     if (mount_count > 0 && mounts) {
-        *mounts = (ntfs_md*)ntfs_alloc(sizeof(ntfs_md) * mount_count);
+        *mounts = (ntfs_md*)ntfs_malloc(sizeof(ntfs_md) * mount_count);
         if (*mounts) {
             memcpy(*mounts, &mount_points, sizeof(ntfs_md) * mount_count);
             return mount_count;
@@ -432,7 +432,7 @@ bool ntfsMount (const char *name, const DISC_INTERFACE *interface, sec_t startSe
     }
 
     // Allocate the volume descriptor
-    vd = (ntfs_vd*)ntfs_alloc(sizeof(ntfs_vd));
+    vd = (ntfs_vd*)ntfs_malloc(sizeof(ntfs_vd));
     if (!vd) {
         errno = ENOMEM;
         return false;
@@ -450,7 +450,7 @@ bool ntfsMount (const char *name, const DISC_INTERFACE *interface, sec_t startSe
     vd->showSystemFiles = (flags & NTFS_SHOW_SYSTEM_FILES);
 
     // Allocate the device driver descriptor
-    fd = (gekko_fd*)ntfs_alloc(sizeof(gekko_fd));
+    fd = (gekko_fd*)ntfs_malloc(sizeof(gekko_fd));
     if (!fd) {
         ntfs_free(vd);
         errno = ENOMEM;

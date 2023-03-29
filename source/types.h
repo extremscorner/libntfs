@@ -36,7 +36,6 @@
 
 #ifdef GEKKO
 #include <gctypes.h>
-#include "compat.h"
 #else /* GEKKO */
 
 typedef uint8_t  u8;			/* Unsigned types of an exact size */
@@ -55,15 +54,23 @@ typedef u16 le16;
 typedef u32 le32;
 typedef u64 le64;
 
+typedef u16 be16;
+typedef u32 be32;
+typedef u64 be64;
+
 /*
- * Declare sle{16,32,64} to be unsigned because we do not want sign extension
- * on BE architectures.
+ * Declare s{l,b}e{16,32,64} to be unsigned because we do not want sign
+ * extension on BE architectures.
  */
 typedef u16 sle16;
 typedef u32 sle32;
 typedef u64 sle64;
 
-typedef u16 ntfschar;			/* 2-byte Unicode character type. */
+typedef u16 sbe16;
+typedef u32 sbe32;
+typedef u64 sbe64;
+
+typedef le16 ntfschar;			/* 2-byte Unicode character type. */
 #define UCHAR_T_SIZE_BITS 1
 
 /*
@@ -87,8 +94,7 @@ typedef sle64 leLSN;
  * Cygwin has a collision between our BOOL and <windef.h>'s
  * As long as this file will be included after <windows.h> were fine.
  */
-#ifndef GEKKO
-#ifndef _WINDEF_H
+#if !defined(GEKKO) && !defined(_WINDEF_H)
 /**
  * enum BOOL - These are just to make the code more readable...
  */
@@ -112,8 +118,7 @@ typedef enum {
 	ONE = 1,
 #endif
 } BOOL;
-#endif /* defined _WINDEF_H */
-#endif /* defined GECKO */
+#endif /* !defined(GEKKO) && !defined(_WINDEF_H) */
 
 /**
  * enum IGNORE_CASE_BOOL -

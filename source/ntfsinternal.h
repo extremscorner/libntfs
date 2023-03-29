@@ -39,6 +39,7 @@
 #include "security.h"
 #include "efs.h"
 #include "unistr.h"
+#include "misc.h"
 
 #include <gccore.h>
 #include <ogc/disc_io.h>
