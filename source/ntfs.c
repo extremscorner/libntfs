@@ -39,6 +39,7 @@
 #include "ntfsdir.h"
 #include "gekko_io.h"
 #include "cache.h"
+#include "bootsect.h"
 
 // NTFS device driver devoptab
 static const devoptab_t devops_ntfs = {
@@ -128,8 +129,15 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
         return -1;
     }
 
+    if (ntfs_boot_sector_is_ntfs(&sector.boot)) {
+        ntfs_log_debug("Valid NTFS boot sector found\n");
+        if (partition_count < NTFS_MAX_PARTITIONS) {
+            partition_starts[partition_count] = 0;
+            partition_count++;
+        }
+
     // If this is the devices master boot record
-    if (sector.mbr.signature == MBR_SIGNATURE) {
+    } else if (sector.mbr.signature == MBR_SIGNATURE) {
         memcpy(&mbr, &sector, sizeof(MASTER_BOOT_RECORD));
         ntfs_log_debug("Valid Master Boot Record found\n");
 
@@ -155,7 +163,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
 
                     // Read and validate the NTFS partition
                     if (interface->readSectors(part_lba, 1, &sector)) {
-                        if (sector.boot.oem_id == NTFS_OEM_ID) {
+                        if (ntfs_boot_sector_is_ntfs(&sector.boot)) {
                             ntfs_log_debug("Partition %i: Valid NTFS boot sector found\n", i + 1);
                             if (partition_count < NTFS_MAX_PARTITIONS) {
                                 partition_starts[partition_count] = part_lba;
@@ -194,7 +202,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
 
                                 // Check if this partition has a valid NTFS boot record
                                 if (interface->readSectors(part_lba, 1, &sector)) {
-                                    if (sector.boot.oem_id == NTFS_OEM_ID) {
+                                    if (ntfs_boot_sector_is_ntfs(&sector.boot)) {
                                         ntfs_log_debug("Logical Partition @ %lld: Valid NTFS boot sector found\n", part_lba);
                                         if(sector.ebr.partition.type != PARTITION_TYPE_NTFS) {
                                             ntfs_log_warning("Logical Partition @ %lld: Is NTFS but type is 0x%x; 0x%x was expected\n", part_lba, sector.ebr.partition.type, PARTITION_TYPE_NTFS);
@@ -223,7 +231,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
                     // Check if this partition has a valid NTFS boot record anyway,
                     // it might be misrepresented due to a lazy partition editor
                     if (interface->readSectors(part_lba, 1, &sector)) {
-                        if (sector.boot.oem_id == NTFS_OEM_ID) {
+                        if (ntfs_boot_sector_is_ntfs(&sector.boot)) {
                             ntfs_log_debug("Partition %i: Valid NTFS boot sector found\n", i + 1);
                             if(partition->type != PARTITION_TYPE_NTFS) {
                                 ntfs_log_warning("Partition %i: Is NTFS but type is 0x%x; 0x%x was expected\n", i + 1, partition->type, PARTITION_TYPE_NTFS);
@@ -248,9 +256,9 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
         ntfs_log_debug("No Master Boot Record was found!\n");
 
         // As a last-ditched effort, search the first 64 sectors of the device for stray NTFS partitions
-        for (i = 0; i < 64; i++) {
+        for (i = 1; i < 64; i++) {
             if (interface->readSectors(i, 1, &sector)) {
-                if (sector.boot.oem_id == NTFS_OEM_ID) {
+                if (ntfs_boot_sector_is_ntfs(&sector.boot)) {
                     ntfs_log_debug("Valid NTFS boot sector found at sector %d!\n", i);
                     if (partition_count < NTFS_MAX_PARTITIONS) {
                         partition_starts[partition_count] = i;
