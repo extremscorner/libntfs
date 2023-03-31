@@ -161,7 +161,7 @@ int ntfs_unlink_r (struct _reent *r, const char *name)
     ntfs_log_trace("name %s\n", name);
 
     // Unlink the entry
-    int ret = ntfsUnlink(ntfsGetVolume(name), name);
+    int ret = ntfsUnlink(ntfsGetVolume(name), name, S_IFLNK);
     if (ret)
         r->_errno = errno;
 
@@ -254,8 +254,8 @@ int ntfs_rename_r (struct _reent *r, const char *oldName, const char *newName)
     }
 
     // Unlink the old entry
-    if (ntfsUnlink(vd, oldName)) {
-        if (ntfsUnlink(vd, newName)) {
+    if (ntfsUnlink(vd, oldName, 0)) {
+        if (ntfsUnlink(vd, newName, 0)) {
             ntfsUnlock(vd);
             return -1;
         }
@@ -301,6 +301,18 @@ int ntfs_mkdir_r (struct _reent *r, const char *path, int mode)
     ntfsUnlock(vd);
 
     return 0;
+}
+
+int ntfs_rmdir_r (struct _reent *r, const char *path)
+{
+    ntfs_log_trace("path %s\n", path);
+
+    // Unlink the entry
+    int ret = ntfsUnlink(ntfsGetVolume(path), path, S_IFDIR);
+    if (ret)
+        r->_errno = errno;
+
+    return ret;
 }
 
 int ntfs_statvfs_r (struct _reent *r, const char *path, struct statvfs *buf)

@@ -578,7 +578,7 @@ cleanup:
     return res;
 }
 
-int ntfsUnlink (ntfs_vd *vd, const char *path)
+int ntfsUnlink (ntfs_vd *vd, const char *path, mode_t type)
 {
     ntfs_inode *dir_ni = NULL, *ni = NULL;
     char *dir = NULL;
@@ -633,6 +633,21 @@ int ntfsUnlink (ntfs_vd *vd, const char *path)
         errno = ENOENT;
         res = -1;
         goto cleanup;
+    }
+
+    // Is this entry a directory
+    if (ni->mrec->flags & MFT_RECORD_IS_DIRECTORY) {
+        if (type == S_IFLNK) {
+            errno = EISDIR;
+            res = -1;
+            goto cleanup;
+        }
+    } else {
+        if (type == S_IFDIR) {
+            errno = ENOTDIR;
+            res = -1;
+            goto cleanup;
+        }
     }
 
     // Open the entries parent directory

@@ -56,6 +56,7 @@ extern int ntfs_unlink_r (struct _reent *r, const char *name);
 extern int ntfs_chdir_r (struct _reent *r, const char *name);
 extern int ntfs_rename_r (struct _reent *r, const char *oldName, const char *newName);
 extern int ntfs_mkdir_r (struct _reent *r, const char *path, int mode);
+extern int ntfs_rmdir_r (struct _reent *r, const char *path);
 extern int ntfs_statvfs_r (struct _reent *r, const char *path, struct statvfs *buf);
 
 /* Gekko devoptab directory walking routines for NTFS-based devices */

@@ -167,7 +167,7 @@ ntfs_inode *ntfsParseEntry (ntfs_vd *vd, const char *path, int reparseLevel);
 void ntfsCloseEntry (ntfs_vd *vd, ntfs_inode *ni);
 ntfs_inode *ntfsCreate (ntfs_vd *vd, const char *path, mode_t type, const char *target);
 int ntfsLink (ntfs_vd *vd, const char *old_path, const char *new_path);
-int ntfsUnlink (ntfs_vd *vd, const char *path);
+int ntfsUnlink (ntfs_vd *vd, const char *path, mode_t type);
 int ntfsSync (ntfs_vd *vd, ntfs_inode *ni);
 int ntfsStat (ntfs_vd *vd, ntfs_inode *ni, struct stat *st);
 void ntfsUpdateTimes (ntfs_vd *vd, ntfs_inode *ni, ntfs_time_update_flags mask);

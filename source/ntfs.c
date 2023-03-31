@@ -65,7 +65,10 @@ static const devoptab_t devops_ntfs = {
     ntfs_statvfs_r,
     ntfs_ftruncate_r,
     ntfs_fsync_r,
-    NULL /* Device data */
+    NULL, /* Device data */
+    NULL, // chmod_r
+    NULL, // fchmod_r
+    ntfs_rmdir_r,
 };
 
 void ntfsInit (void)
