@@ -244,10 +244,10 @@ void ntfsDeinitVolume (ntfs_vd *vd)
     vd->firstOpenFile = NULL;
 
     // Close the volumes current directory (if any)
-    //if (vd->cwd_ni) {
-        //ntfsCloseEntry(vd, vd->cwd_ni);
-        //vd->cwd_ni = NULL;
-    //}
+    if (vd->cwd_ni) {
+        ntfsCloseEntry(vd, vd->cwd_ni);
+        vd->cwd_ni = NULL;
+    }
 
     // Force the underlying device to sync
     ntfs_device_sync(vd->dev);

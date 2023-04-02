@@ -523,7 +523,6 @@ DIR_ITER *ntfs_diropen_r (struct _reent *r, DIR_ITER *dirState, const char *path
         dir->nextOpenDir = NULL;
     }
     dir->prevOpenDir = NULL;
-    dir->vd->cwd_ni = dir->ni;
     dir->vd->firstOpenDir = dir;
     dir->vd->openDirCount++;
 
