@@ -406,6 +406,7 @@ off_t ntfs_seek_r (struct _reent *r, void *fd, off_t pos, int dir)
 
     return position;
 }
+
 int ntfs_fstat_r (struct _reent *r, void *fd, struct stat *st)
 {
     ntfs_log_trace("fd %p\n", (void *) fd);

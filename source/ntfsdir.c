@@ -75,10 +75,6 @@ void ntfsCloseDir (ntfs_dir_state *dir)
 
 int ntfs_stat_r (struct _reent *r, const char *path, struct stat *st)
 {
-    // Short circuit cases were we don't actually have to do anything
-    if (!st || !path)
-        return 0;
-
     ntfs_log_trace("path %s, st %p\n", path, st);
 
     ntfs_vd *vd = NULL;
@@ -91,18 +87,15 @@ int ntfs_stat_r (struct _reent *r, const char *path, struct stat *st)
         return -1;
     }
 
-    if(strcmp(path, ".") == 0 || strcmp(path, "..") == 0)
-    {
-        memset(st, 0, sizeof(struct stat));
-        st->st_mode = S_IFDIR;
+    // Short circuit cases were we don't actually have to do anything
+    if (!st)
         return 0;
-    }
 
     // Lock
     ntfsLock(vd);
 
     // Find the entry
-    ni = ntfsOpenEntry(vd, path);
+    ni = ntfsParseEntry(vd, path, 1);
     if (!ni) {
         r->_errno = errno;
         ntfsUnlock(vd);
@@ -117,6 +110,50 @@ int ntfs_stat_r (struct _reent *r, const char *path, struct stat *st)
     // Close the entry
     ntfsCloseEntry(vd, ni);
 
+    // Unlock
+    ntfsUnlock(vd);
+
+    return 0;
+}
+
+int ntfs_lstat_r (struct _reent *r, const char *path, struct stat *st)
+{
+    ntfs_log_trace("path %s, st %p\n", path, st);
+
+    ntfs_vd *vd = NULL;
+    ntfs_inode *ni = NULL;
+
+    // Get the volume descriptor for this path
+    vd = ntfsGetVolume(path);
+    if (!vd) {
+        r->_errno = ENODEV;
+        return -1;
+    }
+
+    // Short circuit cases were we don't actually have to do anything
+    if (!st)
+        return 0;
+
+    // Lock
+    ntfsLock(vd);
+
+    // Find the entry
+    ni = ntfsParseEntry(vd, path, 0);
+    if (!ni) {
+        r->_errno = errno;
+        ntfsUnlock(vd);
+        return -1;
+    }
+
+    // Get the entry stats
+    int ret = ntfsStat(vd, ni, st);
+    if (ret)
+        r->_errno = errno;
+
+    // Close the entry
+    ntfsCloseEntry(vd, ni);
+
+    // Unlock
     ntfsUnlock(vd);
 
     return 0;
@@ -340,9 +377,9 @@ int ntfs_statvfs_r (struct _reent *r, const char *path, struct statvfs *buf)
     // Zero out the stat buffer
     memset(buf, 0, sizeof(struct statvfs));
 
-    if(ntfs_volume_get_free_space(vd->vol) < 0)
-    {
+    if (ntfs_volume_get_free_space(vd->vol)) {
         ntfsUnlock(vd);
+        r->_errno = EIO;
         return -1;
     }
 
@@ -409,59 +446,31 @@ int ntfs_readdir_filler (DIR_ITER *dirState, const ntfschar *name, const int nam
         return 0;
     }
 
-    // Preliminary check that this entry can be enumerated (as described by the volume descriptor)
-    if (MREF(mref) == FILE_root || MREF(mref) >= FILE_first_user || dir->vd->showSystemFiles) {
+    // Convert the entry name to our current local
+    if (ntfsUnicodeToLocal(name, name_len, &entry_name, 0) < 0) {
+        return -1;
+    }
 
-        // Convert the entry name to our current local
-        if (ntfsUnicodeToLocal(name, name_len, &entry_name, 0) < 0) {
-            return -1;
-        }
+    // Allocate a new directory entry
+    entry = (ntfs_dir_entry *) ntfs_malloc(sizeof(ntfs_dir_entry));
+    if (!entry) {
+        ntfs_free(entry_name);
+        return -1;
+    }
 
-        if(dir->first && dir->first->mref == FILE_root &&
-           MREF(mref) == FILE_root && strcmp(entry_name, "..") == 0)
-        {
-            return 0;
-        }
+    // Setup the entry
+    entry->name = entry_name;
+    entry->mref = mref;
+    entry->type = dt_type;
+    entry->next = NULL;
 
-        // If this is not the parent or self directory reference
-        if ((strcmp(entry_name, ".") != 0) && (strcmp(entry_name, "..") != 0)) {
-
-            // Open the entry
-            ntfs_inode *ni = ntfs_pathname_to_inode(dir->vd->vol, dir->ni, entry_name);
-            if (!ni)
-                return -1;
-
-            // Double check that this entry can be emuerated (as described by the volume descriptor)
-            if (((ni->flags & FILE_ATTR_HIDDEN) && !dir->vd->showHiddenFiles) ||
-                ((ni->flags & FILE_ATTR_SYSTEM) && !dir->vd->showSystemFiles)) {
-                ntfs_inode_close(ni);
-                return 0;
-            }
-
-            // Close the entry
-            ntfs_inode_close(ni);
-
-        }
-
-        // Allocate a new directory entry
-        entry = (ntfs_dir_entry *) ntfs_malloc(sizeof(ntfs_dir_entry));
-        if (!entry)
-            return -1;
-
-        // Setup the entry
-        entry->name = entry_name;
-        entry->next = NULL;
-        entry->mref = MREF(mref);
-
-        // Link the entry to the directory
-        if (!dir->first) {
-            dir->first = entry;
-        } else {
-            ntfs_dir_entry *last = dir->first;
-            while (last->next) last = last->next;
-            last->next = entry;
-        }
-
+    // Link the entry to the directory
+    if (!dir->first) {
+        dir->first = entry;
+    } else {
+        ntfs_dir_entry *last = dir->first;
+        while (last->next) last = last->next;
+        last->next = entry;
     }
 
     return 0;
@@ -564,7 +573,6 @@ int ntfs_dirnext_r (struct _reent *r, DIR_ITER *dirState, char *filename, struct
     ntfs_log_trace("dirState %p, filename %p, filestat %p\n", dirState, filename, filestat);
 
     ntfs_dir_state* dir = STATE(dirState);
-    ntfs_inode *ni = NULL;
 
     // Sanity check
     if (!dir || !dir->vd || !dir->ni) {
@@ -584,20 +592,34 @@ int ntfs_dirnext_r (struct _reent *r, DIR_ITER *dirState, char *filename, struct
 
     // Fetch the current entry
     strcpy(filename, dir->current->name);
-    if(filestat != NULL)
-    {
-        if(strcmp(dir->current->name, ".") == 0 || strcmp(dir->current->name, "..") == 0)
-        {
-            memset(filestat, 0, sizeof(struct stat));
-            filestat->st_mode = S_IFDIR;
-        }
-        else
-        {
-            ni = ntfsOpenEntry(dir->vd, dir->current->name);
-            if (ni) {
-                ntfsStat(dir->vd, ni, filestat);
-                ntfsCloseEntry(dir->vd, ni);
-            }
+    if(filestat != NULL) {
+        memset(filestat, 0, sizeof(struct stat));
+        filestat->st_ino = MREF(dir->current->mref);
+        switch (dir->current->type) {
+            case NTFS_DT_DIR:
+                filestat->st_mode = S_IFDIR | (0777 & ~dir->vd->dmask);
+                break;
+            case NTFS_DT_LNK:
+                filestat->st_mode = S_IFLNK | 0777;
+                break;
+            case NTFS_DT_FIFO:
+                filestat->st_mode = S_IFIFO;
+                break;
+            case NTFS_DT_SOCK:
+                filestat->st_mode = S_IFSOCK;
+                break;
+            case NTFS_DT_BLK:
+                filestat->st_mode = S_IFBLK;
+                break;
+            case NTFS_DT_CHR:
+                filestat->st_mode = S_IFCHR;
+                break;
+            case NTFS_DT_REPARSE:
+                filestat->st_mode = S_IFLNK | 0777;
+                break;
+            default:
+                filestat->st_mode = S_IFREG | (0777 & ~dir->vd->fmask);
+                break;
         }
     }
 

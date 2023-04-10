@@ -295,7 +295,7 @@ ntfs_inode *ntfsParseEntry (ntfs_vd *vd, const char *path, int reparseLevel)
     // If the entry was found and it has reparse data then parse its true path;
     // this resolves the true location of symbolic links and directory junctions
     if (ni && (ni->flags & FILE_ATTR_REPARSE_POINT)) {
-        if (ntfs_possible_symlink(ni)) {
+        if (reparseLevel && ntfs_possible_symlink(ni)) {
 
             // Sanity check, give up if we are parsing to deep
             if (reparseLevel > NTFS_MAX_SYMLINK_DEPTH) {
@@ -318,9 +318,7 @@ ntfs_inode *ntfsParseEntry (ntfs_vd *vd, const char *path, int reparseLevel)
             ni = ntfsParseEntry(vd, target, reparseLevel++);
 
             // Clean up
-            // use free because the value was not allocated with ntfs_malloc
-            free(target);
-
+            ntfs_free(target);
         }
     }
 
@@ -350,7 +348,6 @@ void ntfsCloseEntry (ntfs_vd *vd, ntfs_inode *ni)
 
     return;
 }
-
 
 ntfs_inode *ntfsCreate (ntfs_vd *vd, const char *path, mode_t type, const char *target)
 {
@@ -462,12 +459,11 @@ cleanup:
     if(dir_ni)
         ntfsCloseEntry(vd, dir_ni);
 
-    // use free because the value was not allocated with ntfs_malloc
     if(utarget)
-        free(utarget);
+        ntfs_free(utarget);
 
     if(uname)
-        free(uname);
+        ntfs_free(uname);
 
     if(dir)
         ntfs_free(dir);
@@ -565,9 +561,8 @@ cleanup:
     if(ni)
         ntfsCloseEntry(vd, ni);
 
-    // use free because the value was not allocated with ntfs_malloc
     if(uname)
-        free(uname);
+        ntfs_free(uname);
 
     if(dir)
         ntfs_free(dir);
@@ -677,9 +672,8 @@ cleanup:
     if(ni)
         ntfsCloseEntry(vd, ni);
 
-    // use free because the value was not allocated with ntfs_malloc
     if(uname)
-        free(uname);
+        ntfs_free(uname);
 
     if(dir)
         ntfs_free(dir);
@@ -749,24 +743,29 @@ int ntfsStat (ntfs_vd *vd, ntfs_inode *ni, struct stat *st)
     // Zero out the stat buffer
     memset(st, 0, sizeof(struct stat));
 
+    if (ni->flags & FILE_ATTR_REPARSE_POINT) {
+        st->st_mode = S_IFLNK | 0777;
+        st->st_nlink = le16_to_cpu(ni->mrec->link_count);
+
     // Is this entry a directory
-    if (ni->mrec->flags & MFT_RECORD_IS_DIRECTORY) {
+    } else if (ni->mrec->flags & MFT_RECORD_IS_DIRECTORY) {
+        if (!test_nino_flag(ni, KnownSize)) {
+
+            // Open the directories index allocation table attribute
+            na = ntfs_attr_open(ni, AT_INDEX_ALLOCATION, NTFS_INDEX_I30, 4);
+            if (na) {
+                ni->data_size = na->data_size;
+                ni->allocated_size = na->allocated_size;
+                set_nino_flag(ni, KnownSize);
+                ntfs_attr_close(na);
+            }
+        }
         st->st_mode = S_IFDIR | (0777 & ~vd->dmask);
         st->st_nlink = 1;
-
-        // Open the directories index allocation table attribute
-        na = ntfs_attr_open(ni, AT_INDEX_ALLOCATION, NTFS_INDEX_I30, 4);
-        if (na) {
-            st->st_size = na->data_size;
-            st->st_blocks = na->allocated_size >> 9;
-            ntfs_attr_close(na);
-        }
 
     // Else it must be a file
     } else {
         st->st_mode = S_IFREG | (0777 & ~vd->fmask);
-        st->st_size = ni->data_size;
-        st->st_blocks = (ni->allocated_size + 511) >> 9;
         st->st_nlink = le16_to_cpu(ni->mrec->link_count);
     }
 
@@ -775,6 +774,8 @@ int ntfsStat (ntfs_vd *vd, ntfs_inode *ni, struct stat *st)
     st->st_uid = vd->uid;
     st->st_gid = vd->gid;
     st->st_ino = ni->mft_no;
+    st->st_size = ni->data_size;
+    st->st_blocks = (ni->allocated_size + S_BLKSIZE - 1) / S_BLKSIZE;
     st->st_atim = ntfs2timespec(ni->last_access_time);
     st->st_ctim = ntfs2timespec(ni->last_mft_change_time);
     st->st_mtim = ntfs2timespec(ni->last_data_change_time);

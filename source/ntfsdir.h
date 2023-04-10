@@ -30,7 +30,8 @@
  */
 typedef struct _ntfs_dir_entry {
     char *name;
-    u64 mref;
+    MFT_REF mref;
+    unsigned type;
     struct _ntfs_dir_entry *next;
 } ntfs_dir_entry;
 
@@ -51,6 +52,7 @@ void ntfsCloseDir (ntfs_dir_state *file);
 
 /* Gekko devoptab directory routines for NTFS-based devices */
 extern int ntfs_stat_r (struct _reent *r, const char *path, struct stat *st);
+extern int ntfs_lstat_r (struct _reent *r, const char *path, struct stat *st);
 extern int ntfs_link_r (struct _reent *r, const char *existing, const char *newLink);
 extern int ntfs_unlink_r (struct _reent *r, const char *name);
 extern int ntfs_chdir_r (struct _reent *r, const char *name);

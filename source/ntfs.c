@@ -69,6 +69,8 @@ static const devoptab_t devops_ntfs = {
     NULL, // chmod_r
     NULL, // fchmod_r
     ntfs_rmdir_r,
+    ntfs_lstat_r,
+    NULL, // utimes_r
 };
 
 void ntfsInit (void)
@@ -457,8 +459,6 @@ bool ntfsMount (const char *name, const DISC_INTERFACE *interface, sec_t startSe
     vd->fmask = 0;
     vd->dmask = 0;
     vd->atime = ((flags & NTFS_UPDATE_ACCESS_TIMES) ? ATIME_ENABLED : ATIME_DISABLED);
-    vd->showHiddenFiles = (flags & NTFS_SHOW_HIDDEN_FILES);
-    vd->showSystemFiles = (flags & NTFS_SHOW_SYSTEM_FILES);
 
     // Allocate the device driver descriptor
     fd = (gekko_fd*)ntfs_malloc(sizeof(gekko_fd));
@@ -517,8 +517,10 @@ bool ntfsMount (const char *name, const DISC_INTERFACE *interface, sec_t startSe
         return false;
     }
 
-	if (flags & NTFS_IGNORE_CASE)
-		ntfs_set_ignore_case(vd->vol);
+    ntfs_set_shown_files(vd->vol, flags & NTFS_SHOW_SYSTEM_FILES, flags & NTFS_SHOW_HIDDEN_FILES, TRUE);
+
+    if (flags & NTFS_IGNORE_CASE)
+        ntfs_set_ignore_case(vd->vol);
 
     // Initialise the volume descriptor
     if (ntfsInitVolume(vd)) {
