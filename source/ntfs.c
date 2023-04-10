@@ -545,7 +545,7 @@ void ntfsUnmount (const char *name, bool force)
     ntfs_vd *vd = NULL;
 
     // Get the devices volume descriptor
-    vd = ntfsGetVolume(name);
+    vd = ntfsGetVolume(name, false);
     if (!vd)
         return;
 
@@ -575,7 +575,7 @@ const char *ntfsGetVolumeName (const char *name)
     }
 
     // Get the devices volume descriptor
-    vd = ntfsGetVolume(name);
+    vd = ntfsGetVolume(name, false);
     if (!vd) {
         errno = ENODEV;
         return NULL;
@@ -597,7 +597,7 @@ bool ntfsSetVolumeName (const char *name, const char *volumeName)
     }
 
     // Get the devices volume descriptor
-    vd = ntfsGetVolume(name);
+    vd = ntfsGetVolume(name, false);
     if (!vd) {
         errno = ENODEV;
         return false;

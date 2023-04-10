@@ -151,7 +151,7 @@ static inline void ntfsUnlock (ntfs_vd *vd)
 
 /* Gekko device related routines */
 int ntfsAddDevice (const char *name, void *deviceData);
-void ntfsRemoveDevice (const char *path);
+void ntfsRemoveDevice (const char *name);
 const devoptab_t *ntfsGetDevice (const char *path, bool useDefaultDevice);
 const devoptab_t *ntfsGetDevOpTab (void);
 const INTERFACE_ID* ntfsGetDiscInterfaces (void);
@@ -159,7 +159,7 @@ const INTERFACE_ID* ntfsGetDiscInterfaces (void);
 /* Miscellaneous helper/support routines */
 int ntfsInitVolume (ntfs_vd *vd);
 void ntfsDeinitVolume (ntfs_vd *vd);
-ntfs_vd *ntfsGetVolume (const char *path);
+ntfs_vd *ntfsGetVolume (const char *path, bool useDefaultDevice);
 ntfs_inode *ntfsOpenEntry (ntfs_vd *vd, const char *path);
 ntfs_inode *ntfsParseEntry (ntfs_vd *vd, const char *path, int reparseLevel);
 void ntfsCloseEntry (ntfs_vd *vd, ntfs_inode *ni);

@@ -70,7 +70,6 @@ int ntfsAddDevice (const char *name, void *deviceData)
     const devoptab_t *devoptab_ntfs = ntfsGetDevOpTab();
     devoptab_t *dev = NULL;
     char *devname = NULL;
-    int i;
 
     // Sanity check
     if (!name || !deviceData || !devoptab_ntfs) {
@@ -82,7 +81,7 @@ int ntfsAddDevice (const char *name, void *deviceData)
     dev = (devoptab_t *) ntfs_malloc(sizeof(devoptab_t) + strlen(name) + 1);
     if (!dev) {
         errno = ENOMEM;
-        return false;
+        return -1;
     }
 
     // Use the space allocated at the end of the devoptab for storing the device name
@@ -95,76 +94,36 @@ int ntfsAddDevice (const char *name, void *deviceData)
     dev->deviceData = deviceData;
 
     // Add the device to the devoptab table (if there is a free slot)
-    for (i = 0; i < STD_MAX; i++) {
-        if (devoptab_list[i] == devoptab_list[0] && i != 0) {
-            devoptab_list[i] = dev;
-            return 0;
-        }
-    }
+    if (AddDevice(dev) >= 0)
+        return 0;
 
     // If we reach here then there are no free slots in the devoptab table for this device
     errno = EADDRNOTAVAIL;
     return -1;
 }
 
-void ntfsRemoveDevice (const char *path)
+void ntfsRemoveDevice (const char *name)
 {
-    const devoptab_t *devoptab = NULL;
-    char name[128] = {0};
-    int i;
+    char devname[128];
 
-    // Get the device name from the path
-    strncpy(name, path, 127);
-    strtok(name, ":/");
+    // Get the device name
+    sprintf(devname, "%s:", name);
 
     // Find and remove the specified device from the devoptab table
-    // NOTE: We do this manually due to a 'bug' in RemoveDevice
-    //       which ignores names with suffixes and causes names
-    //       like "ntfs" and "ntfs1" to be seen as equals
-    for (i = 0; i < STD_MAX; i++) {
-        devoptab = devoptab_list[i];
-        if (devoptab && devoptab->name) {
-            if (strcmp(name, devoptab->name) == 0) {
-                devoptab_list[i] = devoptab_list[0];
-                ntfs_free((devoptab_t*)devoptab);
-                break;
-            }
-        }
-    }
-
-    return;
+    RemoveDevice(devname);
 }
 
 const devoptab_t *ntfsGetDevice (const char *path, bool useDefaultDevice)
 {
-    const devoptab_t *devoptab = NULL;
-    char name[128] = {0};
-    int i;
+    char devname[128];
+    if (useDefaultDevice)
+        return GetDeviceOpTab(path);
 
-    // Get the device name from the path
-    strncpy(name, path, 127);
-    strtok(name, ":/");
+    // Get the device name
+    sprintf(devname, "%s:", path);
 
     // Search the devoptab table for the specified device name
-    // NOTE: We do this manually due to a 'bug' in GetDeviceOpTab
-    //       which ignores names with suffixes and causes names
-    //       like "ntfs" and "ntfs1" to be seen as equals
-    for (i = 0; i < STD_MAX; i++) {
-        devoptab = devoptab_list[i];
-        if (devoptab && devoptab->name) {
-            if (strcmp(name, devoptab->name) == 0) {
-                return devoptab;
-            }
-        }
-    }
-
-    // If we reach here then we couldn't find the device name,
-    // chances are that this path has no device name in it.
-    // Call GetDeviceOpTab to get our default device (chdir).
-    if (useDefaultDevice)
-        return GetDeviceOpTab("");
-
-    return NULL;
+    return GetDeviceOpTab(devname);
 }
 
 const INTERFACE_ID *ntfsGetDiscInterfaces (void)
@@ -173,11 +132,11 @@ const INTERFACE_ID *ntfsGetDiscInterfaces (void)
     return ntfs_disc_interfaces;
 }
 
-ntfs_vd *ntfsGetVolume (const char *path)
+ntfs_vd *ntfsGetVolume (const char *path, bool useDefaultDevice)
 {
     // Get the volume descriptor from the paths associated devoptab (if found)
     const devoptab_t *devoptab_ntfs = ntfsGetDevOpTab();
-    const devoptab_t *devoptab = ntfsGetDevice(path, true);
+    const devoptab_t *devoptab = ntfsGetDevice(path, useDefaultDevice);
     if (devoptab && devoptab_ntfs && (devoptab->open_r == devoptab_ntfs->open_r))
         return (ntfs_vd*)devoptab->deviceData;
 
@@ -365,7 +324,7 @@ ntfs_inode *ntfsCreate (ntfs_vd *vd, const char *path, mode_t type, const char *
 
     // You cannot link between devices
     if(target) {
-        if(vd != ntfsGetVolume(target)) {
+        if(vd != ntfsGetVolume(target, true)) {
             errno = EXDEV;
             return NULL;
         }
@@ -490,7 +449,7 @@ int ntfsLink (ntfs_vd *vd, const char *old_path, const char *new_path)
     }
 
     // You cannot link between devices
-    if(vd != ntfsGetVolume(new_path)) {
+    if(vd != ntfsGetVolume(new_path, true)) {
         errno = EXDEV;
         return -1;
     }

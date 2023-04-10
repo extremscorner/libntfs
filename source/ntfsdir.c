@@ -81,7 +81,7 @@ int ntfs_stat_r (struct _reent *r, const char *path, struct stat *st)
     ntfs_inode *ni = NULL;
 
     // Get the volume descriptor for this path
-    vd = ntfsGetVolume(path);
+    vd = ntfsGetVolume(path, true);
     if (!vd) {
         r->_errno = ENODEV;
         return -1;
@@ -124,7 +124,7 @@ int ntfs_lstat_r (struct _reent *r, const char *path, struct stat *st)
     ntfs_inode *ni = NULL;
 
     // Get the volume descriptor for this path
-    vd = ntfsGetVolume(path);
+    vd = ntfsGetVolume(path, true);
     if (!vd) {
         r->_errno = ENODEV;
         return -1;
@@ -167,7 +167,7 @@ int ntfs_link_r (struct _reent *r, const char *existing, const char *newLink)
     ntfs_inode *ni = NULL;
 
     // Get the volume descriptor for this path
-    vd = ntfsGetVolume(existing);
+    vd = ntfsGetVolume(existing, true);
     if (!vd) {
         r->_errno = ENODEV;
         return -1;
@@ -197,8 +197,17 @@ int ntfs_unlink_r (struct _reent *r, const char *name)
 {
     ntfs_log_trace("name %s\n", name);
 
+    ntfs_vd *vd = NULL;
+
+    // Get the volume descriptor for this path
+    vd = ntfsGetVolume(name, true);
+    if (!vd) {
+        r->_errno = ENODEV;
+        return -1;
+    }
+
     // Unlink the entry
-    int ret = ntfsUnlink(ntfsGetVolume(name), name, S_IFLNK);
+    int ret = ntfsUnlink(vd, name, S_IFLNK);
     if (ret)
         r->_errno = errno;
 
@@ -213,7 +222,7 @@ int ntfs_chdir_r (struct _reent *r, const char *name)
     ntfs_inode *ni = NULL;
 
     // Get the volume descriptor for this path
-    vd = ntfsGetVolume(name);
+    vd = ntfsGetVolume(name, true);
     if (!vd) {
         r->_errno = ENODEV;
         return -1;
@@ -259,7 +268,7 @@ int ntfs_rename_r (struct _reent *r, const char *oldName, const char *newName)
     ntfs_inode *ni = NULL;
 
     // Get the volume descriptor for this path
-    vd = ntfsGetVolume(oldName);
+    vd = ntfsGetVolume(oldName, true);
     if (!vd) {
         r->_errno = ENODEV;
         return -1;
@@ -269,7 +278,7 @@ int ntfs_rename_r (struct _reent *r, const char *oldName, const char *newName)
     ntfsLock(vd);
 
     // You cannot rename between devices
-    if(vd != ntfsGetVolume(newName)) {
+    if(vd != ntfsGetVolume(newName, true)) {
         ntfsUnlock(vd);
         r->_errno = EXDEV;
         return -1;
@@ -314,7 +323,7 @@ int ntfs_mkdir_r (struct _reent *r, const char *path, int mode)
     ntfs_inode *ni = NULL;
 
     // Get the volume descriptor for this path
-    vd = ntfsGetVolume(path);
+    vd = ntfsGetVolume(path, true);
     if (!vd) {
         r->_errno = ENODEV;
         return -1;
@@ -344,8 +353,17 @@ int ntfs_rmdir_r (struct _reent *r, const char *path)
 {
     ntfs_log_trace("path %s\n", path);
 
+    ntfs_vd *vd = NULL;
+
+    // Get the volume descriptor for this path
+    vd = ntfsGetVolume(path, true);
+    if (!vd) {
+        r->_errno = ENODEV;
+        return -1;
+    }
+
     // Unlink the entry
-    int ret = ntfsUnlink(ntfsGetVolume(path), path, S_IFDIR);
+    int ret = ntfsUnlink(vd, path, S_IFDIR);
     if (ret)
         r->_errno = errno;
 
@@ -361,7 +379,7 @@ int ntfs_statvfs_r (struct _reent *r, const char *path, struct statvfs *buf)
     int delta_bits;
 
     // Get the volume descriptor for this path
-    vd = ntfsGetVolume(path);
+    vd = ntfsGetVolume(path, true);
     if (!vd) {
         r->_errno = ENODEV;
         return -1;
@@ -484,7 +502,7 @@ DIR_ITER *ntfs_diropen_r (struct _reent *r, DIR_ITER *dirState, const char *path
     s64 position = 0;
 
     // Get the volume descriptor for this path
-    dir->vd = ntfsGetVolume(path);
+    dir->vd = ntfsGetVolume(path, true);
     if (!dir->vd) {
         r->_errno = ENODEV;
         return NULL;

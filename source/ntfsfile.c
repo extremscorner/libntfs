@@ -96,7 +96,7 @@ int ntfs_open_r (struct _reent *r, void *fileStruct, const char *path, int flags
     ntfs_file_state* file = STATE(fileStruct);
 
     // Get the volume descriptor for this path
-    file->vd = ntfsGetVolume(path);
+    file->vd = ntfsGetVolume(path, true);
     if (!file->vd) {
         r->_errno = ENODEV;
         return -1;
@@ -412,7 +412,6 @@ int ntfs_fstat_r (struct _reent *r, void *fd, struct stat *st)
     ntfs_log_trace("fd %p\n", (void *) fd);
 
     ntfs_file_state* file = STATE(fd);
-    int ret = 0;
 
     // Sanity check
     if (!file || !file->vd || !file->ni || !file->data_na) {
@@ -425,7 +424,7 @@ int ntfs_fstat_r (struct _reent *r, void *fd, struct stat *st)
         return 0;
 
     // Get the file stats
-    ret = ntfsStat(file->vd, file->ni, st);
+    int ret = ntfsStat(file->vd, file->ni, st);
     if (ret)
         r->_errno = errno;
 
@@ -504,7 +503,6 @@ int ntfs_fsync_r (struct _reent *r, void *fd)
     ntfs_log_trace("fd %p\n", (void *) fd);
 
     ntfs_file_state* file = STATE(fd);
-    int ret = 0;
 
     // Sanity check
     if (!file || !file->vd || !file->ni || !file->data_na) {
@@ -516,7 +514,7 @@ int ntfs_fsync_r (struct _reent *r, void *fd)
     ntfsLock(file->vd);
 
     // Sync the file (and its attributes) to disc
-    ret = ntfsSync(file->vd, file->ni);
+    int ret = ntfsSync(file->vd, file->ni);
     if (ret)
         r->_errno = errno;
 
