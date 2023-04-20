@@ -52,7 +52,7 @@ static const devoptab_t devops_ntfs = {
     ntfs_seek_r,
     ntfs_fstat_r,
     ntfs_stat_r,
-    ntfs_link_r,
+    NULL, // link_r
     ntfs_unlink_r,
     ntfs_chdir_r,
     ntfs_rename_r,
@@ -71,6 +71,10 @@ static const devoptab_t devops_ntfs = {
     ntfs_rmdir_r,
     ntfs_lstat_r,
     NULL, // utimes_r
+    NULL, // fpathconf_r
+    NULL, // pathconf_r
+    ntfs_symlink_r,
+    NULL, // readlink_r
 };
 
 void ntfsInit (void)

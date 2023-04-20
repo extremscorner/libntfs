@@ -159,15 +159,15 @@ int ntfs_lstat_r (struct _reent *r, const char *path, struct stat *st)
     return 0;
 }
 
-int ntfs_link_r (struct _reent *r, const char *existing, const char *newLink)
+int ntfs_symlink_r (struct _reent *r, const char *target, const char *linkpath)
 {
-    ntfs_log_trace("existing %s, newLink %s\n", existing, newLink);
+    ntfs_log_trace("target %s, linkpath %s\n", target, linkpath);
 
     ntfs_vd *vd = NULL;
     ntfs_inode *ni = NULL;
 
     // Get the volume descriptor for this path
-    vd = ntfsGetVolume(existing, true);
+    vd = ntfsGetVolume(linkpath, true);
     if (!vd) {
         r->_errno = ENODEV;
         return -1;
@@ -177,7 +177,7 @@ int ntfs_link_r (struct _reent *r, const char *existing, const char *newLink)
     ntfsLock(vd);
 
     // Create a symbolic link between the two paths
-    ni = ntfsCreate(vd, existing, S_IFLNK, newLink);
+    ni = ntfsCreate(vd, linkpath, S_IFLNK, target);
     if (!ni) {
         ntfsUnlock(vd);
         r->_errno = errno;
@@ -609,7 +609,7 @@ int ntfs_dirnext_r (struct _reent *r, DIR_ITER *dirState, char *filename, struct
     }
 
     // Fetch the current entry
-    strcpy(filename, dir->current->name);
+    strncpy(filename, dir->current->name, NAME_MAX + 1);
     if(filestat != NULL) {
         memset(filestat, 0, sizeof(struct stat));
         filestat->st_ino = MREF(dir->current->mref);

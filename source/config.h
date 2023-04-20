@@ -155,10 +155,10 @@
 #define HAVE_RANDOM 1
 
 /* Define to 1 if you have the `realpath' function. */
-/* #undef HAVE_REALPATH */
+#define HAVE_REALPATH 1
 
 /* Define to 1 if you have the `regcomp' function. */
-/* #undef HAVE_REGCOMP */
+#define HAVE_REGCOMP 1
 
 /* Define to 1 if you have the <regex.h> header file. */
 #define HAVE_REGEX_H 1
