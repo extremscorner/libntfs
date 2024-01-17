@@ -1,4 +1,6 @@
 
+export DESTDIR := $(DESTDIR)
+
 default: cube-release wii-release
 
 all: debug release

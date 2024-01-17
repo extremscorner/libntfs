@@ -90,9 +90,12 @@ clean:
 all: $(NTFSBIN)
 
 install:
-	cp ../include/ntfs.h $(DEVKITRICE)/usr/include
-	cp lib/wii/libntfs.a $(DEVKITRICE)/usr/lib/wii
-	cp lib/cube/libntfs.a $(DEVKITRICE)/usr/lib/cube
+	@mkdir -p $(DEVKITRICE)/usr/lib/cube
+	@mkdir -p $(DEVKITRICE)/usr/lib/wii
+	@mkdir -p $(DEVKITRICE)/usr/include
+	@cp lib/wii/libntfs.a $(DEVKITRICE)/usr/lib/wii
+	@cp lib/cube/libntfs.a $(DEVKITRICE)/usr/lib/cube
+	@cp ../include/ntfs.h $(DEVKITRICE)/usr/include
 
 #---------------------------------------------------------------------------------
 else

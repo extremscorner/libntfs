@@ -98,9 +98,12 @@ clean:
 all: $(NTFSBIN)
 
 install:
-	cp ../include/ntfs.h $(DEVKITPRO)/libogc2/include
-	cp lib/wii/libntfs.a $(DEVKITPRO)/libogc2/lib/wii
-	cp lib/cube/libntfs.a $(DEVKITPRO)/libogc2/lib/cube
+	@mkdir -p $(DESTDIR)$(DEVKITPRO)/libogc2/lib/cube
+	@mkdir -p $(DESTDIR)$(DEVKITPRO)/libogc2/lib/wii
+	@mkdir -p $(DESTDIR)$(DEVKITPRO)/libogc2/include
+	@cp lib/wii/libntfs.a $(DESTDIR)$(DEVKITPRO)/libogc2/lib/wii
+	@cp lib/cube/libntfs.a $(DESTDIR)$(DEVKITPRO)/libogc2/lib/cube
+	@cp ../include/ntfs.h $(DESTDIR)$(DEVKITPRO)/libogc2/include
 
 #---------------------------------------------------------------------------------
 else
