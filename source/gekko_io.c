@@ -1,8 +1,9 @@
 /**
  * gekko_io.c - Gekko style disk io functions.
  *
- * Copyright (c) 2009 Rhys "Shareese" Koedijk
+ * Copyright (c) 2023 Extrems
  * Copyright (c) 2010 Dimok
+ * Copyright (c) 2009 Rhys "Shareese" Koedijk
  *
  * This program/include file is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published

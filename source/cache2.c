@@ -1,5 +1,5 @@
 /*
- cache.c
+ cache2.c
  The cache is not visible to the user. It should be flushed
  when any file is closed or changes are made to the filesystem.
 
@@ -12,6 +12,7 @@
  Copyright (c) 2006 Michael "Chishm" Chisholm
  Copyright (c) 2009 shareese, rodries
  Copyright (c) 2010 Dimok
+ Copyright (c) 2024 Extrems
 
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
@@ -35,17 +36,17 @@
  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <ogc/lwp_watchdog.h>
 #include <string.h>
 #include <limits.h>
 
 #include "cache2.h"
-#include "bit_ops.h"
+
 #include "mem_allocate.h"
+#include "bit_ops.h"
 
-#define CACHE_FREE UINT_MAX
+#define CACHE_FREE ((sec_t)-1)
 
-NTFS_CACHE* _NTFS_cache_constructor (unsigned int numberOfPages, unsigned int sectorsPerPage, const DISC_INTERFACE* discInterface, sec_t endOfPartition, sec_t sectorSize) {
+NTFS_CACHE* _NTFS_cache_constructor (unsigned int numberOfPages, unsigned int sectorsPerPage, const DISC_INTERFACE* discInterface, sec_t endOfPartition, unsigned int bytesPerSector) {
 	NTFS_CACHE* cache;
 	unsigned int i;
 	NTFS_CACHE_ENTRY* cacheEntries;
@@ -58,6 +59,8 @@ NTFS_CACHE* _NTFS_cache_constructor (unsigned int numberOfPages, unsigned int se
 
 	if (sectorsPerPage < 32) {
 		sectorsPerPage = 32;
+	} else if (sectorsPerPage > 64) {
+		sectorsPerPage = 64;
 	}
 
 	cache = (NTFS_CACHE*) ntfs_alloc (sizeof(NTFS_CACHE));
@@ -69,7 +72,7 @@ NTFS_CACHE* _NTFS_cache_constructor (unsigned int numberOfPages, unsigned int se
 	cache->endOfPartition = endOfPartition;
 	cache->numberOfPages = numberOfPages;
 	cache->sectorsPerPage = sectorsPerPage;
-	cache->sectorSize = sectorSize;
+	cache->bytesPerSector = bytesPerSector;
 
 
 	cacheEntries = (NTFS_CACHE_ENTRY*) ntfs_alloc ( sizeof(NTFS_CACHE_ENTRY) * numberOfPages);
@@ -82,8 +85,8 @@ NTFS_CACHE* _NTFS_cache_constructor (unsigned int numberOfPages, unsigned int se
 		cacheEntries[i].sector = CACHE_FREE;
 		cacheEntries[i].count = 0;
 		cacheEntries[i].last_access = 0;
-		cacheEntries[i].dirty = false;
-		cacheEntries[i].cache = (uint8_t*) ntfs_align ( sectorsPerPage * cache->sectorSize );
+		cacheEntries[i].dirty = 0;
+		cacheEntries[i].cache = (uint8_t*) ntfs_align ( sectorsPerPage * bytesPerSector );
 	}
 
 	cache->cacheEntries = cacheEntries;
@@ -93,9 +96,6 @@ NTFS_CACHE* _NTFS_cache_constructor (unsigned int numberOfPages, unsigned int se
 
 void _NTFS_cache_destructor (NTFS_CACHE* cache) {
 	unsigned int i;
-
-	if(cache==NULL) return;
-
 	// Clear out cache before destroying it
 	_NTFS_cache_flush(cache);
 
@@ -107,6 +107,7 @@ void _NTFS_cache_destructor (NTFS_CACHE* cache) {
 	ntfs_free (cache);
 }
 
+
 static u32 accessCounter = 0;
 
 static u32 accessTime(){
@@ -114,7 +115,8 @@ static u32 accessTime(){
 	return accessCounter;
 }
 
-static NTFS_CACHE_ENTRY* _NTFS_cache_getPage(NTFS_CACHE *cache,sec_t sector)
+
+static NTFS_CACHE_ENTRY* _NTFS_cache_getPage(NTFS_CACHE *cache,sec_t sector,sec_t numSectors,bool write)
 {
 	unsigned int i;
 	NTFS_CACHE_ENTRY* cacheEntries = cache->cacheEntries;
@@ -132,36 +134,62 @@ static NTFS_CACHE_ENTRY* _NTFS_cache_getPage(NTFS_CACHE *cache,sec_t sector)
 		}
 
 		if(foundFree==false && (cacheEntries[i].sector==CACHE_FREE || cacheEntries[i].last_access<oldAccess)) {
-		    if(cacheEntries[i].sector==CACHE_FREE) foundFree = true;
+			if(cacheEntries[i].sector==CACHE_FREE) foundFree = true;
 			oldUsed = i;
 			oldAccess = cacheEntries[i].last_access;
 		}
 	}
 
-	if(foundFree==false && cacheEntries[oldUsed].dirty==true) {
-		if(!cache->disc->writeSectors(cacheEntries[oldUsed].sector,cacheEntries[oldUsed].count,cacheEntries[oldUsed].cache)) return NULL;
-		cacheEntries[oldUsed].dirty = false;
+	if(foundFree==false && cacheEntries[oldUsed].dirty!=0) {
+		sec_t sec = ffsll(cacheEntries[oldUsed].dirty)-1;
+		sec_t secs_to_write = flsll(cacheEntries[oldUsed].dirty)-sec;
+
+		if(!cache->disc->writeSectors(cacheEntries[oldUsed].sector+sec,secs_to_write,cacheEntries[oldUsed].cache+(sec*cache->bytesPerSector))) return NULL;
+
+		cacheEntries[oldUsed].dirty = 0;
 	}
-	sector = (sector/sectorsPerPage)*sectorsPerPage; // align base sector to page size
-	sec_t next_page = sector + sectorsPerPage;
-	if(next_page > cache->endOfPartition)	next_page = cache->endOfPartition;
 
-	if(!cache->disc->readSectors(sector,next_page-sector,cacheEntries[oldUsed].cache)) return NULL;
+	cacheEntries[oldUsed].sector = (sector/sectorsPerPage)*sectorsPerPage; // align base sector to page size
+	sector -= cacheEntries[oldUsed].sector;
+	cacheEntries[oldUsed].count = cache->endOfPartition - cacheEntries[oldUsed].sector;
+	if(cacheEntries[oldUsed].count > sectorsPerPage) cacheEntries[oldUsed].count = sectorsPerPage;
+	else sectorsPerPage = cacheEntries[oldUsed].count;
+	if(numSectors > sectorsPerPage - sector) numSectors = sectorsPerPage - sector;
 
-	cacheEntries[oldUsed].sector = sector;
-	cacheEntries[oldUsed].count = next_page-sector;
+	sec_t sec = 0;
+	sec_t secs_to_read = sectorsPerPage;
+
+	if(write) {
+		if (sector == sec && numSectors == secs_to_read) {
+			cacheEntries[oldUsed].last_access = accessTime();
+			return &(cacheEntries[oldUsed]);
+		} else if (sector == sec) {
+			sec += numSectors;
+			secs_to_read -= numSectors;
+		} else if (sector + numSectors == sec + secs_to_read) {
+			secs_to_read -= numSectors;
+		}
+	}
+
+	if(!cache->disc->readSectors(cacheEntries[oldUsed].sector+sec,secs_to_read,cacheEntries[oldUsed].cache+(sec*cache->bytesPerSector))) {
+		cacheEntries[oldUsed].sector = CACHE_FREE;
+		cacheEntries[oldUsed].count = 0;
+		cacheEntries[oldUsed].last_access = 0;
+		cacheEntries[oldUsed].dirty = 0;
+		return NULL;
+	}
+
 	cacheEntries[oldUsed].last_access = accessTime();
-
 	return &(cacheEntries[oldUsed]);
 }
 
-static NTFS_CACHE_ENTRY* _NTFS_cache_findPage(NTFS_CACHE *cache, sec_t sector, sec_t count) {
-
+static NTFS_CACHE_ENTRY* _NTFS_cache_findPage(NTFS_CACHE *cache,sec_t sector,sec_t count)
+{
 	unsigned int i;
 	NTFS_CACHE_ENTRY* cacheEntries = cache->cacheEntries;
 	unsigned int numberOfPages = cache->numberOfPages;
-	NTFS_CACHE_ENTRY *entry = NULL;
-	sec_t	lowest = UINT_MAX;
+	NTFS_CACHE_ENTRY* entry = NULL;
+	sec_t lowest = CACHE_FREE;
 
 	for(i=0;i<numberOfPages;i++) {
 		if (cacheEntries[i].sector != CACHE_FREE) {
@@ -172,7 +200,7 @@ static NTFS_CACHE_ENTRY* _NTFS_cache_findPage(NTFS_CACHE *cache, sec_t sector, s
 				intersect = cacheEntries[i].sector - sector < count;
 			}
 
-			if ( intersect && (cacheEntries[i].sector < lowest)) {
+			if (intersect && (cacheEntries[i].sector < lowest)) {
 				lowest = cacheEntries[i].sector;
 				entry = &cacheEntries[i];
 			}
@@ -187,19 +215,39 @@ bool _NTFS_cache_readSectors(NTFS_CACHE *cache,sec_t sector,sec_t numSectors,voi
 	sec_t sec;
 	sec_t secs_to_read;
 	NTFS_CACHE_ENTRY *entry;
-	uint8_t *dest = buffer;
+	uint8_t *dest = (uint8_t *)buffer;
 
 	while(numSectors>0) {
-		entry = _NTFS_cache_getPage(cache,sector);
+		if(((uintptr_t)dest%32)==0 && (sector%cache->sectorsPerPage)==0) {
+			entry = _NTFS_cache_findPage(cache,sector,numSectors);
+			if(entry==NULL) {
+				secs_to_read = (numSectors/cache->sectorsPerPage)*cache->sectorsPerPage;
+			} else if (entry->sector > sector) {
+				secs_to_read = entry->sector - sector;
+			} else {
+				secs_to_read = 0;
+			}
+
+			if(secs_to_read>0) {
+				if(!cache->disc->readSectors(sector,secs_to_read,dest)) return false;
+
+				dest += (secs_to_read*cache->bytesPerSector);
+				sector += secs_to_read;
+				numSectors -= secs_to_read;
+				continue;
+			}
+		}
+
+		entry = _NTFS_cache_getPage(cache,sector,numSectors,false);
 		if(entry==NULL) return false;
 
 		sec = sector - entry->sector;
 		secs_to_read = entry->count - sec;
 		if(secs_to_read>numSectors) secs_to_read = numSectors;
 
-		memcpy(dest,entry->cache + (sec*cache->sectorSize),(secs_to_read*cache->sectorSize));
+		memcpy(dest,entry->cache + (sec*cache->bytesPerSector),(secs_to_read*cache->bytesPerSector));
 
-		dest += (secs_to_read*cache->sectorSize);
+		dest += (secs_to_read*cache->bytesPerSector);
 		sector += secs_to_read;
 		numSectors -= secs_to_read;
 	}
@@ -210,19 +258,18 @@ bool _NTFS_cache_readSectors(NTFS_CACHE *cache,sec_t sector,sec_t numSectors,voi
 /*
 Reads some data from a cache page, determined by the sector number
 */
-
 bool _NTFS_cache_readPartialSector (NTFS_CACHE* cache, void* buffer, sec_t sector, unsigned int offset, size_t size)
 {
 	sec_t sec;
 	NTFS_CACHE_ENTRY *entry;
 
-	if (offset + size > cache->sectorSize) return false;
+	if (offset + size > cache->bytesPerSector) return false;
 
-	entry = _NTFS_cache_getPage(cache,sector);
+	entry = _NTFS_cache_getPage(cache,sector,1,false);
 	if(entry==NULL) return false;
 
 	sec = sector - entry->sector;
-	memcpy(buffer,entry->cache + ((sec*cache->sectorSize) + offset),size);
+	memcpy(buffer,entry->cache + ((sec*cache->bytesPerSector) + offset),size);
 
 	return true;
 }
@@ -243,21 +290,20 @@ bool _NTFS_cache_readLittleEndianValue (NTFS_CACHE* cache, uint32_t *value, sec_
 /*
 Writes some data to a cache page, making sure it is loaded into memory first.
 */
-
 bool _NTFS_cache_writePartialSector (NTFS_CACHE* cache, const void* buffer, sec_t sector, unsigned int offset, size_t size)
 {
 	sec_t sec;
 	NTFS_CACHE_ENTRY *entry;
 
-	if (offset + size > cache->sectorSize) return false;
+	if (offset + size > cache->bytesPerSector) return false;
 
-	entry = _NTFS_cache_getPage(cache,sector);
+	entry = _NTFS_cache_getPage(cache,sector,1,false);
 	if(entry==NULL) return false;
 
 	sec = sector - entry->sector;
-	memcpy(entry->cache + ((sec*cache->sectorSize) + offset),buffer,size);
+	memcpy(entry->cache + ((sec*cache->bytesPerSector) + offset),buffer,size);
 
-	entry->dirty = true;
+	entry->dirty |= 1ULL << sec;
 	return true;
 }
 
@@ -277,66 +323,69 @@ bool _NTFS_cache_writeLittleEndianValue (NTFS_CACHE* cache, const uint32_t value
 /*
 Writes some data to a cache page, zeroing out the page first
 */
-
 bool _NTFS_cache_eraseWritePartialSector (NTFS_CACHE* cache, const void* buffer, sec_t sector, unsigned int offset, size_t size)
 {
 	sec_t sec;
 	NTFS_CACHE_ENTRY *entry;
 
-	if (offset + size > cache->sectorSize) return false;
+	if (offset + size > cache->bytesPerSector) return false;
 
-	entry = _NTFS_cache_getPage(cache,sector);
+	entry = _NTFS_cache_getPage(cache,sector,1,true);
 	if(entry==NULL) return false;
 
 	sec = sector - entry->sector;
-	memset(entry->cache + (sec*cache->sectorSize),0,cache->sectorSize);
-	memcpy(entry->cache + ((sec*cache->sectorSize) + offset),buffer,size);
+	memset(entry->cache + (sec*cache->bytesPerSector),0,cache->bytesPerSector);
+	memcpy(entry->cache + ((sec*cache->bytesPerSector) + offset),buffer,size);
 
-	entry->dirty = true;
+	entry->dirty |= 1ULL << sec;
 	return true;
 }
+
 
 bool _NTFS_cache_writeSectors (NTFS_CACHE* cache, sec_t sector, sec_t numSectors, const void* buffer)
 {
 	sec_t sec;
 	sec_t secs_to_write;
-	NTFS_CACHE_ENTRY* entry;
-	const uint8_t *src = buffer;
+	NTFS_CACHE_ENTRY *entry;
+	const uint8_t *src = (const uint8_t *)buffer;
 
-	while(numSectors>0)
-	{
-		entry = _NTFS_cache_findPage(cache,sector,numSectors);
-
-		if(entry!=NULL) {
-
-			if ( entry->sector > sector) {
-
+	while(numSectors>0) {
+		if(((uintptr_t)src%32)==0 && (sector%cache->sectorsPerPage)==0) {
+			entry = _NTFS_cache_findPage(cache,sector,numSectors);
+			if(entry==NULL) {
+				secs_to_write = (numSectors/cache->sectorsPerPage)*cache->sectorsPerPage;
+			} else if (entry->sector > sector) {
 				secs_to_write = entry->sector - sector;
-
-				cache->disc->writeSectors(sector,secs_to_write,src);
-				src += (secs_to_write*cache->sectorSize);
-				sector += secs_to_write;
-				numSectors -= secs_to_write;
+			} else {
+				secs_to_write = 0;
 			}
 
-			sec = sector - entry->sector;
-			secs_to_write = entry->count - sec;
+			if(secs_to_write>0) {
+				if(!cache->disc->writeSectors(sector,secs_to_write,src)) return false;
 
-			if(secs_to_write>numSectors) secs_to_write = numSectors;
-
-			memcpy(entry->cache + (sec*cache->sectorSize),src,(secs_to_write*cache->sectorSize));
-
-			src += (secs_to_write*cache->sectorSize);
-			sector += secs_to_write;
-			numSectors -= secs_to_write;
-
-			entry->dirty = true;
-
-		} else {
-			cache->disc->writeSectors(sector,numSectors,src);
-			numSectors=0;
+				src += (secs_to_write*cache->bytesPerSector);
+				sector += secs_to_write;
+				numSectors -= secs_to_write;
+				continue;
+			}
 		}
+
+		entry = _NTFS_cache_getPage(cache,sector,numSectors,true);
+		if(entry==NULL) return false;
+
+		sec = sector - entry->sector;
+		secs_to_write = entry->count - sec;
+		if(secs_to_write>numSectors) secs_to_write = numSectors;
+
+		memcpy(entry->cache + (sec*cache->bytesPerSector),src,(secs_to_write*cache->bytesPerSector));
+
+		src += (secs_to_write*cache->bytesPerSector);
+		sector += secs_to_write;
+		numSectors -= secs_to_write;
+
+		entry->dirty |= ((1ULL << secs_to_write)-1) << sec;
 	}
+
 	return true;
 }
 
@@ -344,16 +393,22 @@ bool _NTFS_cache_writeSectors (NTFS_CACHE* cache, sec_t sector, sec_t numSectors
 Flushes all dirty pages to disc, clearing the dirty flag.
 */
 bool _NTFS_cache_flush (NTFS_CACHE* cache) {
+	sec_t sec;
+	sec_t secs_to_write;
+	NTFS_CACHE_ENTRY *entry;
 	unsigned int i;
-	if(cache==NULL) return true;
 
 	for (i = 0; i < cache->numberOfPages; i++) {
-		if (cache->cacheEntries[i].dirty) {
-			if (!cache->disc->writeSectors (cache->cacheEntries[i].sector, cache->cacheEntries[i].count, cache->cacheEntries[i].cache)) {
-				return false;
-			}
+		entry = &cache->cacheEntries[i];
+
+		if (entry->dirty) {
+			sec = ffsll(entry->dirty) - 1;
+			secs_to_write = flsll(entry->dirty) - sec;
+
+			if (!cache->disc->writeSectors(entry->sector + sec, secs_to_write, entry->cache + (sec * cache->bytesPerSector))) return false;
+
+			entry->dirty = 0;
 		}
-		cache->cacheEntries[i].dirty = false;
 	}
 
 	return true;
@@ -361,14 +416,11 @@ bool _NTFS_cache_flush (NTFS_CACHE* cache) {
 
 void _NTFS_cache_invalidate (NTFS_CACHE* cache) {
 	unsigned int i;
-	if(cache==NULL)
-        return;
-
 	_NTFS_cache_flush(cache);
 	for (i = 0; i < cache->numberOfPages; i++) {
 		cache->cacheEntries[i].sector = CACHE_FREE;
-		cache->cacheEntries[i].last_access = 0;
 		cache->cacheEntries[i].count = 0;
-		cache->cacheEntries[i].dirty = false;
+		cache->cacheEntries[i].last_access = 0;
+		cache->cacheEntries[i].dirty = 0;
 	}
 }

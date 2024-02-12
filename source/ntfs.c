@@ -1,6 +1,7 @@
 /**
  * ntfs.c - Simple functionality for startup, mounting and unmounting of NTFS-based devices.
  *
+ * Copyright (c) 2023 Extrems
  * Copyright (c) 2009 Rhys "Shareese" Koedijk
  * Copyright (c) 2006 Michael "Chishm" Chisholm
  *

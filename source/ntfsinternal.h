@@ -1,6 +1,7 @@
 /**
  * ntfsinternal.h - Internal support routines for NTFS-based devices.
  *
+ * Copyright (c) 2023 Extrems
  * Copyright (c) 2009 Rhys "Shareese" Koedijk
  * Copyright (c) 2006 Michael "Chishm" Chisholm
  *

@@ -17,7 +17,7 @@ include	$(DEVKITRICE)/rules
 BUILD		?=	wii_release
 SOURCES		:=	../source
 INCLUDES	:=	../include
-LIBDIR		:=	lib
+LIBDIR		:=	$(TOPDIR)/libogc-rice/lib
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -53,6 +53,8 @@ LIBDIRS		:=
 #---------------------------------------------------------------------------------
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
+
+export TOPDIR	?=	$(CURDIR)/..
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
@@ -90,12 +92,9 @@ clean:
 all: $(NTFSBIN)
 
 install:
-	@mkdir -p $(DEVKITRICE)/usr/lib/cube
-	@mkdir -p $(DEVKITRICE)/usr/lib/wii
-	@mkdir -p $(DEVKITRICE)/usr/include
-	@cp lib/wii/libntfs.a $(DEVKITRICE)/usr/lib/wii
-	@cp lib/cube/libntfs.a $(DEVKITRICE)/usr/lib/cube
-	@cp ../include/ntfs.h $(DEVKITRICE)/usr/include
+	@mkdir -p $(DEVKITRICE)/usr
+	@cp -frv $(TOPDIR)/include $(DEVKITRICE)/usr
+	@cp -frv $(CURDIR)/lib $(DEVKITRICE)/usr
 
 #---------------------------------------------------------------------------------
 else
@@ -106,12 +105,12 @@ DEPENDS	:=	$(OFILES:.o=.d)
 # main targets
 #---------------------------------------------------------------------------------
 $(NTFSBIN): $(OFILES) $(LIBDIR)/$(PLATFORM)
-	@rm -f "../$(NTFSBIN)"
-	@$(AR) rcs "../$(NTFSBIN)" $(OFILES)
+	@rm -f "$(NTFSBIN)"
+	@$(AR) rcs "$(NTFSBIN)" $(OFILES)
 	@echo built ... $(notdir $@)
 
 $(LIBDIR)/$(PLATFORM):
-	mkdir -p ../$(LIBDIR)/$(PLATFORM)
+	mkdir -p $(LIBDIR)/$(PLATFORM)
 
 -include $(DEPENDS)
 

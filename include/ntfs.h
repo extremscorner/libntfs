@@ -1,6 +1,7 @@
 /**
  * ntfs.h - Simple functionality for startup, mounting and unmounting of NTFS-based devices.
  *
+ * Copyright (c) 2024 Extrems
  * Copyright (c) 2010 Dimok
  * Copyright (c) 2009 Rhys "Shareese" Koedijk
  * Copyright (c) 2006 Michael "Chishm" Chisholm
@@ -38,8 +39,8 @@ extern "C" {
 #define EHIBERNATED                     3003 /* Volume is hibernated and NTFS_IGNORE_HIBERFILE was not specified during mount */
 
 /* NTFS cache options */
-#define CACHE_DEFAULT_PAGE_COUNT        8   /* The default number of pages in the cache */
-#define CACHE_DEFAULT_PAGE_SIZE         128 /* The default number of sectors per cache page */
+#define CACHE_DEFAULT_PAGE_COUNT        8  /* The default number of pages in the cache */
+#define CACHE_DEFAULT_PAGE_SIZE         64 /* The default number of sectors per cache page */
 
 /* NTFS mount flags */
 #define NTFS_DEFAULT                    0x00000000 /* Standard mount, expects a clean, non-hibernated volume */
