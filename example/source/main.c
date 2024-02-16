@@ -54,8 +54,10 @@ void list(const char *path, int depth)
         memset(indent, ' ', depth * 2);
 
         // List the contents of the directory
-        while ((pent = readdir(pdir)) != NULL) {
-            if ((strcmp(pent->d_name, ".") == 0) || (strcmp(pent->d_name, "..") == 0))
+        do {
+            errno = 0;
+            pent = readdir(pdir);
+            if (!pent || !strcmp(pent->d_name, ".") || !strcmp(pent->d_name, ".."))
                 continue;
 
             // Get the entries stats
@@ -72,12 +74,12 @@ void list(const char *path, int depth)
                 chdir(path);
 
             } else if (S_ISREG(st.st_mode)) {
-                printf(" F %s%s (%lu)\n", indent, pent->d_name, (unsigned long int)st.st_size);
+                printf(" F %s%s (%lld)\n", indent, pent->d_name, st.st_size);
             } else {
                 printf(" ? %s%s\n", indent, pent->d_name);
             }
 
-        }
+        } while (pent || errno == EOVERFLOW);
 
         // Close the directory
         closedir(pdir);
