@@ -97,7 +97,7 @@ void ntfsInit (void)
     return;
 }
 
-int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
+int ntfsFindPartitions (DISC_INTERFACE *interface, sec_t **partitions)
 {
     MASTER_BOOT_RECORD mbr;
     PARTITION_RECORD *partition = NULL;
@@ -125,16 +125,16 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
     ntfsInit();
 
     // Start the device and check that it is inserted
-    if (!interface->startup()) {
+    if (!interface->startup(interface)) {
         errno = EIO;
         return -1;
     }
-    if (!interface->isInserted()) {
+    if (!interface->isInserted(interface)) {
         return 0;
     }
 
     // Read the first sector on the device
-    if (!interface->readSectors(0, 1, &sector.buffer)) {
+    if (!interface->readSectors(interface, 0, 1, &sector.buffer)) {
         errno = EIO;
         return -1;
     }
@@ -172,7 +172,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
                     ntfs_log_debug("Partition %i: Claims to be NTFS\n", i + 1);
 
                     // Read and validate the NTFS partition
-                    if (interface->readSectors(part_lba, 1, &sector)) {
+                    if (interface->readSectors(interface, part_lba, 1, &sector)) {
                         if (ntfs_boot_sector_is_ntfs(&sector.boot)) {
                             ntfs_log_debug("Partition %i: Valid NTFS boot sector found\n", i + 1);
                             if (partition_count < NTFS_MAX_PARTITIONS) {
@@ -199,7 +199,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
                     do {
 
                         // Read and validate the extended boot record
-                        if (interface->readSectors(ebr_lba + next_erb_lba, 1, &sector)) {
+                        if (interface->readSectors(interface, ebr_lba + next_erb_lba, 1, &sector)) {
                             if (sector.ebr.signature == EBR_SIGNATURE) {
                                 ntfs_log_debug("Logical Partition @ %lld: %s type 0x%x\n", ebr_lba + next_erb_lba,
                                                sector.ebr.partition.status == PARTITION_STATUS_BOOTABLE ? "bootable (active)" : "non-bootable",
@@ -211,7 +211,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
                                 next_erb_lba = le32_to_cpu(sector.ebr.next_ebr.lba_start);
 
                                 // Check if this partition has a valid NTFS boot record
-                                if (interface->readSectors(part_lba, 1, &sector)) {
+                                if (interface->readSectors(interface, part_lba, 1, &sector)) {
                                     if (ntfs_boot_sector_is_ntfs(&sector.boot)) {
                                         ntfs_log_debug("Logical Partition @ %lld: Valid NTFS boot sector found\n", part_lba);
                                         if(sector.ebr.partition.type != PARTITION_TYPE_NTFS) {
@@ -240,7 +240,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
 
                     // Check if this partition has a valid NTFS boot record anyway,
                     // it might be misrepresented due to a lazy partition editor
-                    if (interface->readSectors(part_lba, 1, &sector)) {
+                    if (interface->readSectors(interface, part_lba, 1, &sector)) {
                         if (ntfs_boot_sector_is_ntfs(&sector.boot)) {
                             ntfs_log_debug("Partition %i: Valid NTFS boot sector found\n", i + 1);
                             if(partition->type != PARTITION_TYPE_NTFS) {
@@ -267,7 +267,7 @@ int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions)
 
         // As a last-ditched effort, search the first 64 sectors of the device for stray NTFS partitions
         for (i = 1; i < 64; i++) {
-            if (interface->readSectors(i, 1, &sector)) {
+            if (interface->readSectors(interface, i, 1, &sector)) {
                 if (ntfs_boot_sector_is_ntfs(&sector.boot)) {
                     ntfs_log_debug("Valid NTFS boot sector found at sector %d!\n", i);
                     if (partition_count < NTFS_MAX_PARTITIONS) {
@@ -350,7 +350,7 @@ int ntfsMountAll (ntfs_md **mounts, u32 flags)
     return 0;
 }
 
-int ntfsMountDevice (const DISC_INTERFACE *interface, ntfs_md **mounts, u32 flags)
+int ntfsMountDevice (DISC_INTERFACE *interface, ntfs_md **mounts, u32 flags)
 {
     const INTERFACE_ID *discs = ntfsGetDiscInterfaces();
     const INTERFACE_ID *disc = NULL;
@@ -423,7 +423,7 @@ int ntfsMountDevice (const DISC_INTERFACE *interface, ntfs_md **mounts, u32 flag
     return 0;
 }
 
-bool ntfsMount (const char *name, const DISC_INTERFACE *interface, sec_t startSector, u32 cachePageCount, u32 cachePageSize, u32 flags)
+bool ntfsMount (const char *name, DISC_INTERFACE *interface, sec_t startSector, u32 cachePageCount, u32 cachePageSize, u32 flags)
 {
     ntfs_vd *vd = NULL;
     gekko_fd *fd = NULL;

@@ -53,12 +53,12 @@ typedef struct {
 } NTFS_CACHE_ENTRY;
 
 typedef struct {
-	const DISC_INTERFACE* disc;
-	sec_t		          endOfPartition;
-	unsigned int          numberOfPages;
-	unsigned int          sectorsPerPage;
-	unsigned int          bytesPerSector;
-	NTFS_CACHE_ENTRY*     cacheEntries;
+	DISC_INTERFACE*   disc;
+	sec_t             endOfPartition;
+	unsigned int      numberOfPages;
+	unsigned int      sectorsPerPage;
+	unsigned int      bytesPerSector;
+	NTFS_CACHE_ENTRY* cacheEntries;
 } NTFS_CACHE;
 
 /*
@@ -125,7 +125,7 @@ Clear out the contents of the cache without writing any dirty sectors first
 */
 void _NTFS_cache_invalidate (NTFS_CACHE* cache);
 
-NTFS_CACHE* _NTFS_cache_constructor (unsigned int numberOfPages, unsigned int sectorsPerPage, const DISC_INTERFACE* discInterface, sec_t endOfPartition, unsigned int bytesPerSector);
+NTFS_CACHE* _NTFS_cache_constructor (unsigned int numberOfPages, unsigned int sectorsPerPage, DISC_INTERFACE* discInterface, sec_t endOfPartition, unsigned int bytesPerSector);
 
 void _NTFS_cache_destructor (NTFS_CACHE* cache);
 

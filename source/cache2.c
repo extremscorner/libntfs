@@ -46,7 +46,7 @@
 
 #define CACHE_FREE ((sec_t)-1)
 
-NTFS_CACHE* _NTFS_cache_constructor (unsigned int numberOfPages, unsigned int sectorsPerPage, const DISC_INTERFACE* discInterface, sec_t endOfPartition, unsigned int bytesPerSector) {
+NTFS_CACHE* _NTFS_cache_constructor (unsigned int numberOfPages, unsigned int sectorsPerPage, DISC_INTERFACE* discInterface, sec_t endOfPartition, unsigned int bytesPerSector) {
 	NTFS_CACHE* cache;
 	unsigned int i;
 	NTFS_CACHE_ENTRY* cacheEntries;
@@ -144,7 +144,7 @@ static NTFS_CACHE_ENTRY* _NTFS_cache_getPage(NTFS_CACHE *cache,sec_t sector,sec_
 		sec_t sec = ffsll(cacheEntries[oldUsed].dirty)-1;
 		sec_t secs_to_write = flsll(cacheEntries[oldUsed].dirty)-sec;
 
-		if(!cache->disc->writeSectors(cacheEntries[oldUsed].sector+sec,secs_to_write,cacheEntries[oldUsed].cache+(sec*cache->bytesPerSector))) return NULL;
+		if(!cache->disc->writeSectors(cache->disc,cacheEntries[oldUsed].sector+sec,secs_to_write,cacheEntries[oldUsed].cache+(sec*cache->bytesPerSector))) return NULL;
 
 		cacheEntries[oldUsed].dirty = 0;
 	}
@@ -171,7 +171,7 @@ static NTFS_CACHE_ENTRY* _NTFS_cache_getPage(NTFS_CACHE *cache,sec_t sector,sec_
 		}
 	}
 
-	if(!cache->disc->readSectors(cacheEntries[oldUsed].sector+sec,secs_to_read,cacheEntries[oldUsed].cache+(sec*cache->bytesPerSector))) {
+	if(!cache->disc->readSectors(cache->disc,cacheEntries[oldUsed].sector+sec,secs_to_read,cacheEntries[oldUsed].cache+(sec*cache->bytesPerSector))) {
 		cacheEntries[oldUsed].sector = CACHE_FREE;
 		cacheEntries[oldUsed].count = 0;
 		cacheEntries[oldUsed].last_access = 0;
@@ -229,7 +229,7 @@ bool _NTFS_cache_readSectors(NTFS_CACHE *cache,sec_t sector,sec_t numSectors,voi
 			}
 
 			if(secs_to_read>0) {
-				if(!cache->disc->readSectors(sector,secs_to_read,dest)) return false;
+				if(!cache->disc->readSectors(cache->disc,sector,secs_to_read,dest)) return false;
 
 				dest += (secs_to_read*cache->bytesPerSector);
 				sector += secs_to_read;
@@ -361,7 +361,7 @@ bool _NTFS_cache_writeSectors (NTFS_CACHE* cache, sec_t sector, sec_t numSectors
 			}
 
 			if(secs_to_write>0) {
-				if(!cache->disc->writeSectors(sector,secs_to_write,src)) return false;
+				if(!cache->disc->writeSectors(cache->disc,sector,secs_to_write,src)) return false;
 
 				src += (secs_to_write*cache->bytesPerSector);
 				sector += secs_to_write;
@@ -405,7 +405,7 @@ bool _NTFS_cache_flush (NTFS_CACHE* cache) {
 			sec = ffsll(entry->dirty) - 1;
 			secs_to_write = flsll(entry->dirty) - sec;
 
-			if (!cache->disc->writeSectors(entry->sector + sec, secs_to_write, entry->cache + (sec * cache->bytesPerSector))) return false;
+			if (!cache->disc->writeSectors(cache->disc, entry->sector + sec, secs_to_write, entry->cache + (sec * cache->bytesPerSector))) return false;
 
 			entry->dirty = 0;
 		}

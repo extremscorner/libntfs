@@ -85,19 +85,19 @@ static int ntfs_device_gekko_io_open(struct ntfs_device *dev, int flags)
     }
 
     // Get the device interface
-    const DISC_INTERFACE* interface = fd->interface;
+    DISC_INTERFACE *interface = fd->interface;
     if (!interface) {
         errno = ENODEV;
         return -1;
     }
 
     // Start the device interface and ensure that it is inserted
-    if (!interface->startup()) {
+    if (!interface->startup(interface)) {
         ntfs_log_perror("device failed to start\n");
         errno = EIO;
         return -1;
     }
-    if (!interface->isInserted()) {
+    if (!interface->isInserted(interface)) {
         ntfs_log_perror("device media is not inserted\n");
         errno = EIO;
         return -1;
@@ -117,7 +117,7 @@ static int ntfs_device_gekko_io_open(struct ntfs_device *dev, int flags)
         return -1;
     }
 
-    if (!interface->readSectors(fd->startSector, 1, boot)) {
+    if (!interface->readSectors(interface, fd->startSector, 1, boot)) {
         ntfs_log_perror("read failure @ sector %lld\n", fd->startSector);
         errno = EIO;
         ntfs_free(boot);
@@ -199,9 +199,9 @@ static int ntfs_device_gekko_io_close(struct ntfs_device *dev)
     }
 
     // Shutdown the device interface
-    /*const DISC_INTERFACE* interface = fd->interface;
+    /*DISC_INTERFACE *interface = fd->interface;
     if (interface) {
-        interface->shutdown();
+        interface->shutdown(interface);
     }*/
 
     // Free the device driver private data
@@ -282,7 +282,7 @@ static s64 ntfs_device_gekko_io_readbytes(struct ntfs_device *dev, s64 offset, s
     }
 
     // Get the device interface
-    const DISC_INTERFACE* interface = fd->interface;
+    DISC_INTERFACE *interface = fd->interface;
     if (!interface) {
         errno = ENODEV;
         return -1;
@@ -368,7 +368,7 @@ static s64 ntfs_device_gekko_io_writebytes(struct ntfs_device *dev, s64 offset, 
     }
 
     // Get the device interface
-    const DISC_INTERFACE* interface = fd->interface;
+    DISC_INTERFACE *interface = fd->interface;
     if (!interface) {
         errno = ENODEV;
         return -1;
@@ -477,7 +477,7 @@ static bool ntfs_device_gekko_io_readsectors(struct ntfs_device *dev, sec_t sect
     if (fd->cache)
         return _NTFS_cache_readSectors(fd->cache, sector, numSectors, buffer);
     else
-        return fd->interface->readSectors(sector, numSectors, buffer);
+        return fd->interface->readSectors(fd->interface, sector, numSectors, buffer);
 
     return false;
 }
@@ -495,7 +495,7 @@ static bool ntfs_device_gekko_io_writesectors(struct ntfs_device *dev, sec_t sec
     if (fd->cache)
         return _NTFS_cache_writeSectors(fd->cache, sector, numSectors, buffer);
     else
-        return fd->interface->writeSectors(sector, numSectors, buffer);
+        return fd->interface->writeSectors(fd->interface, sector, numSectors, buffer);
 
     return false;
 }

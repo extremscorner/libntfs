@@ -59,7 +59,7 @@ extern "C" {
  */
 typedef struct _ntfs_md {
     char name[32];                      /* Mount name (can be accessed as "name:/") */
-    const DISC_INTERFACE *interface;    /* Block device containing the mounted partition */
+    DISC_INTERFACE *interface;          /* Block device containing the mounted partition */
     sec_t startSector;                  /* Local block address to first sector of partition */
 } ntfs_md;
 
@@ -72,7 +72,7 @@ typedef struct _ntfs_md {
  * @return The number of entries in PARTITIONS or -1 if an error occurred (see errno)
  * @note The caller is responsible for freeing PARTITIONS when finished with it
  */
-extern int ntfsFindPartitions (const DISC_INTERFACE *interface, sec_t **partitions);
+extern int ntfsFindPartitions (DISC_INTERFACE *interface, sec_t **partitions);
 
 /**
  * Mount all NTFS partitions on all inserted block devices.
@@ -97,7 +97,7 @@ extern int ntfsMountAll (ntfs_md **mounts, u32 flags);
  * @note The caller is responsible for freeing MOUNTS when finished with it
  * @note The device cache is setup using default values (see above)
  */
-extern int ntfsMountDevice (const DISC_INTERFACE* interface, ntfs_md **mounts, u32 flags);
+extern int ntfsMountDevice (DISC_INTERFACE* interface, ntfs_md **mounts, u32 flags);
 
 /**
  * Mount a NTFS partition from a specific sector on a block device.
@@ -112,7 +112,7 @@ extern int ntfsMountDevice (const DISC_INTERFACE* interface, ntfs_md **mounts, u
  * @return True if mount was successful, false if no partition was found or an error occurred (see errno)
  * @note ntfsFindPartitions should be used first to locate the partitions start sector
  */
-extern bool ntfsMount (const char *name, const DISC_INTERFACE *interface, sec_t startSector, u32 cachePageCount, u32 cachePageSize, u32 flags);
+extern bool ntfsMount (const char *name, DISC_INTERFACE *interface, sec_t startSector, u32 cachePageCount, u32 cachePageSize, u32 flags);
 
 /**
  * Unmount a NTFS partition.
