@@ -218,7 +218,7 @@ bool _NTFS_cache_readSectors(NTFS_CACHE *cache,sec_t sector,sec_t numSectors,voi
 	uint8_t *dest = (uint8_t *)buffer;
 
 	while(numSectors>0) {
-		if(SYS_IsDMAAddress(dest) && (sector%cache->sectorsPerPage)==0) {
+		if(SYS_IsDMAAddress(dest,32) && (sector%cache->sectorsPerPage)==0) {
 			entry = _NTFS_cache_findPage(cache,sector,numSectors);
 			if(entry==NULL) {
 				secs_to_read = (numSectors/cache->sectorsPerPage)*cache->sectorsPerPage;
@@ -350,7 +350,7 @@ bool _NTFS_cache_writeSectors (NTFS_CACHE* cache, sec_t sector, sec_t numSectors
 	const uint8_t *src = (const uint8_t *)buffer;
 
 	while(numSectors>0) {
-		if(SYS_IsDMAAddress(src) && (sector%cache->sectorsPerPage)==0) {
+		if(SYS_IsDMAAddress(src,32) && (sector%cache->sectorsPerPage)==0) {
 			entry = _NTFS_cache_findPage(cache,sector,numSectors);
 			if(entry==NULL) {
 				secs_to_write = (numSectors/cache->sectorsPerPage)*cache->sectorsPerPage;
