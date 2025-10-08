@@ -13,7 +13,7 @@ release: cube-release wii-release
 
 cube-debug:
 	-$(MAKE) -C libogc-rice PLATFORM=cube BUILD=cube_debug
-	$(MAKE) -C libogc2 PLATFORM=cube BUILD=cube_debug
+	$(MAKE) -C libogc2 PLATFORM=gamecube BUILD=gamecube_debug
 
 wii-debug:
 	-$(MAKE) -C libogc-rice PLATFORM=wii BUILD=wii_debug
@@ -21,7 +21,7 @@ wii-debug:
 
 cube-release:
 	-$(MAKE) -C libogc-rice PLATFORM=cube BUILD=cube_release
-	$(MAKE) -C libogc2 PLATFORM=cube BUILD=cube_release
+	$(MAKE) -C libogc2 PLATFORM=gamecube BUILD=gamecube_release
 
 wii-release:
 	-$(MAKE) -C libogc-rice PLATFORM=wii BUILD=wii_release

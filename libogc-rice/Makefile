@@ -13,6 +13,7 @@ include	$(DEVKITRICE)/rules
 # BUILD is the directory where object files & intermediate files will be placed
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
+# LIBDIR is where the built library will be placed
 #---------------------------------------------------------------------------------
 BUILD		?=	wii_release
 SOURCES		:=	../source
@@ -110,7 +111,7 @@ $(NTFSBIN): $(OFILES) $(LIBDIR)/$(PLATFORM)
 	@echo built ... $(notdir $@)
 
 $(LIBDIR)/$(PLATFORM):
-	mkdir -p $(LIBDIR)/$(PLATFORM)
+	@mkdir -p $(LIBDIR)/$(PLATFORM)
 
 -include $(DEPENDS)
 

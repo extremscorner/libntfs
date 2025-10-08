@@ -11,7 +11,7 @@ ifeq ($(PLATFORM),wii)
 include $(DEVKITPRO)/libogc2/wii_rules
 endif
 
-ifeq ($(PLATFORM),cube)
+ifeq ($(PLATFORM),gamecube)
 include $(DEVKITPRO)/libogc2/gamecube_rules
 endif
 
@@ -19,21 +19,22 @@ endif
 # BUILD is the directory where object files & intermediate files will be placed
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
+# LIB is where the built library will be placed
 #---------------------------------------------------------------------------------
 BUILD		?=	wii_release
 SOURCES		:=	../source
 INCLUDES	:=	../include
-LIBDIR		:=	$(TOPDIR)/libogc2/lib
+LIB			:=	$(TOPDIR)/libogc2/$(PLATFORM)/lib
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-CFLAGS		=	-g -Os -Wall -Wno-address-of-packed-member $(MACHDEP) $(INCLUDE) -DHAVE_CONFIG_H
+CFLAGS		=	-g -O2 -Wall -Wno-address-of-packed-member $(MACHDEP) $(INCLUDE) -DHAVE_CONFIG_H
 CXXFLAGS	=	$(CFLAGS)
 ASFLAGS		:=	-g
-export NTFSBIN	:= $(LIBDIR)/$(PLATFORM)/libntfs.a
+export NTFSBIN	:= $(LIB)/libntfs.a
 
-ifeq ($(BUILD),cube_debug)
+ifeq ($(BUILD),gamecube_debug)
 CFLAGS += -DDEBUG
 CXXFLAGS += -DDEBUG
 endif
@@ -95,14 +96,16 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr wii_debug wii_release cube_debug cube_release $(LIBDIR)
+	@rm -fr wii wii_debug wii_release gamecube gamecube_debug gamecube_release
 
 all: $(NTFSBIN)
 
 install:
 	@mkdir -p $(DESTDIR)$(DEVKITPRO)/libogc2
-	@cp -frv $(TOPDIR)/include $(DESTDIR)$(DEVKITPRO)/libogc2
-	@cp -frv $(CURDIR)/lib $(DESTDIR)$(DEVKITPRO)/libogc2
+	@cp -frv $(TOPDIR)/include $(CURDIR)/gamecube
+	@cp -frv $(TOPDIR)/include $(CURDIR)/wii
+	@cp -frv $(CURDIR)/gamecube $(DESTDIR)$(DEVKITPRO)/libogc2
+	@cp -frv $(CURDIR)/wii $(DESTDIR)$(DEVKITPRO)/libogc2
 
 #---------------------------------------------------------------------------------
 else
@@ -112,13 +115,13 @@ DEPENDS	:=	$(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-$(NTFSBIN): $(OFILES) $(LIBDIR)/$(PLATFORM)
+$(NTFSBIN): $(OFILES) $(LIB)
 	@rm -f "$(NTFSBIN)"
 	@$(AR) rcs "$(NTFSBIN)" $(OFILES)
 	@echo built ... $(notdir $@)
 
-$(LIBDIR)/$(PLATFORM):
-	mkdir -p $(LIBDIR)/$(PLATFORM)
+$(LIB):
+	@mkdir -p $(LIB)
 
 -include $(DEPENDS)
 
