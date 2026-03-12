@@ -411,7 +411,7 @@ bool _NTFS_cache_flush (NTFS_CACHE* cache) {
 		}
 	}
 
-	return true;
+	return cache->disc->flush(cache->disc);
 }
 
 void _NTFS_cache_invalidate (NTFS_CACHE* cache) {

@@ -524,6 +524,11 @@ static int ntfs_device_gekko_io_sync(struct ntfs_device *dev)
             errno = EIO;
             return -1;
         }
+    } else {
+        if (!fd->interface->flush(fd->interface)) {
+            errno = EIO;
+            return -1;
+        }
     }
 
     return 0;
