@@ -259,7 +259,7 @@
 /* #undef HAVE_SYS_DISK_H */
 
 /* Define to 1 if you have the <sys/endian.h> header file. */
-/* #undef HAVE_SYS_ENDIAN_H */
+#define HAVE_SYS_ENDIAN_H 1
 
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
 /* #undef HAVE_SYS_IOCTL_H */
@@ -343,7 +343,7 @@
 #define PACKAGE_NAME "ntfs-3g"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "ntfs-3g 2022.10.3"
+#define PACKAGE_STRING "ntfs-3g 2026.2.25"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "ntfs-3g"
@@ -352,7 +352,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2022.10.3"
+#define PACKAGE_VERSION "2026.2.25"
 
 /* POSIX ACL support */
 /* #undef POSIXACLS */
@@ -451,7 +451,7 @@
 
 
 /* Version number of package */
-#define VERSION "2022.10.3"
+#define VERSION "2026.2.25"
 
 /* Define to 1 if this is a Windows OS */
 /* #undef WINDOWS */
