@@ -2673,8 +2673,17 @@ s64 ntfs_attr_mst_pread(ntfs_attr *na, const s64 pos, const s64 bk_cnt,
 		/* log errors unless silenced */
 	warn = !na->ni || !na->ni->vol || !NVolNoFixupWarn(na->ni->vol);
 	for (end = (u8*)dst + br * bk_size; (u8*)dst < end; dst = (u8*)dst +
-			bk_size)
-		ntfs_mst_post_read_fixup_warn((NTFS_RECORD*)dst, bk_size, warn);
+			bk_size) {
+		/*
+		 * A record which cannot be multi sector transfer protected at
+		 * all (EINVAL) has not been deprotected, so it must not be
+		 * used. A record damaged by an incomplete transfer (EIO) is
+		 * left to the caller, which detects it by the BAAD magic.
+		 */
+		if (ntfs_mst_post_read_fixup_warn((NTFS_RECORD*)dst, bk_size,
+					warn) && (errno == EINVAL))
+			return -1;
+	}
 	/* Finally, return the number of blocks read. */
 	return br;
 }
@@ -3340,6 +3349,20 @@ do_next_attr_loop:
 		 */
 		if (al_entry->type != a->type)
 			break;
+		/*
+		 * The same check is made in ntfs_attr_inconsistent() when the
+		 * mft record is read, but that validation is skipped for the
+		 * tools which set NVolNoFixupWarn(), so the name has to be
+		 * checked here as well.
+		 */
+		if (a->name_length && ((le16_to_cpu(a->name_offset)
+				+ a->name_length * sizeof(ntfschar))
+				> le32_to_cpu(a->length))) {
+			ntfs_log_error("Corrupt attribute name"
+				" in MFT record %lld\n",
+				(long long)ctx->ntfs_ino->mft_no);
+			break;
+		}
 		if (!ntfs_names_are_equal((ntfschar*)((char*)a +
 				le16_to_cpu(a->name_offset)),
 				a->name_length, al_name,
