@@ -148,6 +148,9 @@
 /* Define to 1 if you have the <mntent.h> header file. */
 /* #undef HAVE_MNTENT_H */
 
+/* Defined to 1 if the 'optreset' global variable is present. */
+#define HAVE_OPTRESET 1
+
 /* Define to 1 if you have the <pwd.h> header file. */
 #define HAVE_PWD_H 1
 
@@ -343,7 +346,7 @@
 #define PACKAGE_NAME "ntfs-3g"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "ntfs-3g 2026.9.18"
+#define PACKAGE_STRING "ntfs-3g 2026.9.28"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "ntfs-3g"
@@ -352,7 +355,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2026.9.18"
+#define PACKAGE_VERSION "2026.9.28"
 
 /* POSIX ACL support */
 /* #undef POSIXACLS */
@@ -451,7 +454,7 @@
 
 
 /* Version number of package */
-#define VERSION "2026.9.18"
+#define VERSION "2026.9.28"
 
 /* Define to 1 if this is a Windows OS */
 /* #undef WINDOWS */
